@@ -2,8 +2,8 @@
 
  - [GET /forgot-password](#get-forgot-password)
  - [POST /forgot-password](#post-forgot-password)
- - [GET /forgot-password/:token]()
- - [POST /forgot-password/:token]()
+ - [GET /forgot-password/:token](#get-forgot-passwordtoken)
+ - [POST /forgot-password/:token](#post-forgot-passwordtoken)
 
 #### GET /forgot-password
 
