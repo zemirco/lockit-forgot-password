@@ -33,10 +33,10 @@
 
 #### POST /forgot-password/:token
 
- - check for `token`
- - no `token` found -> continue with error handling middleware
  - verify format of `token`
  - `token` has the wrong format -> continue with error handling middleware
+ - check that `password` isn't empty
+ - `password` is empty -> render `get-new-password` with error message
  - find user with given `token` in db
  - no user found -> continue with error handling middleware
  - create hash of given `password` with bcrypt
