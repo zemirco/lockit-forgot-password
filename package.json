@@ -32,6 +32,7 @@
     "grunt-contrib-jshint": "~0.6.4",
     "grunt-mocha-test": "~0.7.0",
     "lockit-couchdb-adapter": "0.0.2",
+    "lockit-sendmail": "~0.0.2",
     "nano": "~4.1.1",
     "express": "3.3.5",
     "jade": "*"
