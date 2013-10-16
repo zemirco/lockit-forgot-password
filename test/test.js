@@ -247,9 +247,9 @@ describe('forgot-password', function() {
 // remove user from db
 after(function(done) {
 
-  adapter.delete('username', 'john', function(err) {
+  adapter.remove('username', 'john', function(err) {
     if (err) console.log(err);
-    adapter.delete('username', 'steve', function(err) {
+    adapter.remove('username', 'steve', function(err) {
       if (err) console.log(err);
       done();
     });
