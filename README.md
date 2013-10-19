@@ -1,8 +1,10 @@
-# forgot password middleware for lockit
+# Lockit forgot password
 
-[![Build Status](https://travis-ci.org/zeMirco/lockit-forgot-password.png?branch=master)](https://travis-ci.org/zeMirco/lockit-forgot-password)
+[![Build Status](https://travis-ci.org/zeMirco/lockit-forgot-password.png?branch=master)](https://travis-ci.org/zeMirco/lockit-forgot-password) [![NPM version](https://badge.fury.io/js/lockit-forgot-password.png)](http://badge.fury.io/js/lockit-forgot-password)
 
-work in progress - come back later
+[![NPM](https://nodei.co/npm/lockit-forgot-password.png)](https://nodei.co/npm/lockit-forgot-password/)
+
+Help users who forgot their passwords for your Express app. The module is part of [Lockit](https://github.com/zeMirco/lockit).
 
 ## Installation
 
@@ -29,51 +31,25 @@ forgotPassword(app, config);
 app.use(express.static(path.join(__dirname, 'public')));
 ```
 
-## What do I get?
+## Configuration
 
- - [GET /forgot-password](#get-forgot-password)
- - [POST /forgot-password](#post-forgot-password)
- - [GET /forgot-password/:token](#get-forgot-passwordtoken)
- - [POST /forgot-password/:token](#post-forgot-passwordtoken)
+More about configuration at [Lockit](https://github.com/zeMirco/lockit).
 
-#### GET /forgot-password
+## Features
 
- - render `get-forgot-password` template with input field for `email`
+ - allow password reset for users
+ - input validation
+ - link expiration times
+ - user email verification via unique token
+ - hash password using [bcrypt](https://github.com/ncb000gt/node.bcrypt.js)
+ - token format verification before database querying
 
-#### POST /forgot-password
+## Routes included
 
- - verify that `email` isn't empty and is a valid email address
- - find user with given `email` in database
- - no user found -> render `post-forgot-password` template with success message to pretend we've sent an email
- - delete old password hash
- - create the `token` and expiration date for `token`
- - save new user details to db
- - send an email with link containing the `token`
- - render `post-forgot-password` template containing success message
-
-#### GET /forgot-password/:token
-
- - verify format of `token`
- - `token` has the wrong format -> continue with error handling middleware
- - find user with given `token` in db
- - no user found -> continue with error handling middleware
- - check if token has expired
- - token has expired -> delete token and token expiration date for user
- - token has expired -> save user to db and render `link-expired` template
- - render `get-new-password` template with input field for `password`
-
-#### POST /forgot-password/:token
-
- - verify format of `token`
- - `token` has the wrong format -> continue with error handling middleware
- - check that `password` isn't empty
- - `password` is empty -> render `get-new-password` with error message
- - find user with given `token` in db
- - no user found -> continue with error handling middleware
- - create hash of given `password` with bcrypt
- - delete token and token expiration date for user
- - save new user details to db
- - render `change-password-success` template with success message
+ - GET /forgot-password
+ - POST /forgot-password
+ - GET /forgot-password/:token
+ - POST /forgot-password/:token
 
 ## Test
 
