@@ -10,7 +10,7 @@ var debug = require('debug')('lockit-forgot-password');
 module.exports = function(app, config) {
   
   var adapter = require('lockit-' + config.db + '-adapter')(config);
-  var Sendmail = require('lockit-sendmail')(config);
+  var Mail = require('lockit-sendmail')(config);
 
   // set default route
   var route = config.forgotPasswordRoute || '/forgot-password';
@@ -59,8 +59,7 @@ module.exports = function(app, config) {
       }
       
       // user found in db
-      // set old pw and hash to null
-      // send link with setting new password page
+      // delete old password and send link with setting new password page
       var token = uuid.v4();
       delete user.hash;
       user.pwdResetToken = token;
@@ -74,8 +73,8 @@ module.exports = function(app, config) {
         if (err) console.log(err);
 
         // send email with forgot password link
-        var message = new Sendmail('emailForgotPassword');
-        message.send(user.username, user.email, token, function(err, res) {
+        var mail = new Mail('emailForgotPassword');
+        mail.send(user.username, user.email, token, function(err, res) {
           if (err) console.log(err);
           response.render(path.join(__dirname, 'views', 'post-forgot-password'), {
             title: 'Forgot password'
