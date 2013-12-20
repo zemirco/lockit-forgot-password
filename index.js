@@ -2,17 +2,22 @@
 var path = require('path');
 var uuid = require('node-uuid');
 var bcrypt = require('bcrypt');
+var ms = require('ms');
+var moment = require('moment');
+
+var debug = require('debug')('lockit-forgot-password');
 
 module.exports = function(app, config) {
   
   var adapter = require('lockit-' + config.db + '-adapter')(config);
-  var sendmail = require('lockit-sendmail')(config);
+  var Sendmail = require('lockit-sendmail')(config);
 
   // set default route
   var route = config.forgotPasswordRoute || '/forgot-password';
 
   // GET /forgot-password
   app.get(route, function(req, res) {
+    debug('rendering GET %s', route);
     res.render(path.join(__dirname, 'views', 'get-forgot-password'), {
       title: 'Forgot password'
     });
@@ -20,7 +25,7 @@ module.exports = function(app, config) {
   
   // POST /forgot-password
   app.post(route, function(req, response) {
-    
+    debug('receiving data via POST request to %s: %j', route, req.body);
     var email = req.body.email;
 
     var error = null;
@@ -29,6 +34,7 @@ module.exports = function(app, config) {
 
     // check for valid input
     if (!email || !email.match(EMAIL_REGEXP)) {
+      debug('Invalid input value: Email is invalid');
       response.status(403);
       response.render(path.join(__dirname, 'views', 'get-forgot-password'), {
         title: 'Forgot password',
@@ -45,6 +51,7 @@ module.exports = function(app, config) {
       
       // no user found -> pretend we sent an email
       if (!user) {
+        debug('No user found. Pretend to send an email');
         response.render(path.join(__dirname, 'views', 'post-forgot-password'), {
           title: 'Forgot password'
         });
@@ -59,24 +66,20 @@ module.exports = function(app, config) {
       user.pwdResetToken = token;
       
       // set expiration date for password reset token
-      var now = new Date();
-      var tomorrow = now.setTime(now.getTime() + config.forgotPasswordTokenExpiration);
-
-      user.pwdResetTokenExpires = new Date(tomorrow);
+      var timespan = ms(config.forgotPasswordTokenExpiration);      
+      user.pwdResetTokenExpires = moment().add(timespan, 'ms').toDate();
       
       // update user in db
       adapter.update(user, function(err, res) {
         if (err) console.log(err);
 
         // send email with forgot password link
-        sendmail.forgotPassword(user.username, user.email, token, function(err, res) {
+        var message = new Sendmail('emailForgotPassword');
+        message.send(user.username, user.email, token, function(err, res) {
           if (err) console.log(err);
-
-          // render success message
           response.render(path.join(__dirname, 'views', 'post-forgot-password'), {
             title: 'Forgot password'
           });
-          
         });
         
       });
@@ -87,7 +90,7 @@ module.exports = function(app, config) {
   
   // GET /forgot-password/:token
   app.get(route + '/:token', function(req, res, next) {
-    
+    debug('rendering GET %s/:token', route);
     // get token from url
     var token = req.params.token;
     
@@ -95,7 +98,10 @@ module.exports = function(app, config) {
     var re = new RegExp('[0-9a-f]{22}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', 'i');
 
     // if format is wrong no need to query the database
-    if (!re.test(token)) return next();
+    if (!re.test(token)) {
+      debug('Token has invalid format');
+      return next();
+    }
     
     // check if we have a user with that token
     adapter.find('pwdResetToken', token, function(err, user) {
@@ -106,7 +112,7 @@ module.exports = function(app, config) {
       
       // check if token has expired
       if (new Date(user.pwdResetTokenExpires) < new Date()) {
-
+        debug('Token has expired');
         // make old token invalid
         delete user.pwdResetToken;
         delete user.pwdResetTokenExpires;
@@ -125,7 +131,7 @@ module.exports = function(app, config) {
         return;
       }
       
-      // send token as local variable for POST request to right url 
+      // render success message
       res.render(path.join(__dirname, 'views', 'get-new-password'), {
         token: token,
         title: 'Choose a new password'
@@ -137,7 +143,7 @@ module.exports = function(app, config) {
   
   // POST /forgot-password/:token
   app.post(route + '/:token', function(req, res, next) {
-    
+    debug('receiving data via POST request to %s/:token: %j', route, req.body);
     var password = req.body.password;
     var token = req.params.token;
 
@@ -145,10 +151,14 @@ module.exports = function(app, config) {
     var re = new RegExp('[0-9a-f]{22}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', 'i');
 
     // if format is wrong no need to query the database
-    if (!re.test(token)) return next();
+    if (!re.test(token)) {
+      debug('Token has invalid format');
+      return next();
+    }
 
     // check for valid input
     if (!password) {
+      debug('Password missing');
       res.status(403);
       res.render(path.join(__dirname, 'views', 'get-forgot-password'), {
         title: 'Choose a new password',
@@ -167,7 +177,7 @@ module.exports = function(app, config) {
 
       // check if token has expired
       if (new Date(user.pwdResetTokenExpires) < new Date()) {
-
+        debug('Token has expired');
         // make old token invalid
         delete user.pwdResetToken;
         delete user.pwdResetTokenExpires;
