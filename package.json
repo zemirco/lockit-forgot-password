@@ -37,7 +37,7 @@
     "lockit-couchdb-adapter": "0.0.3",
     "lockit-sendmail": "0.0.4",
     "nano": "~4.1.1",
-    "express": "3.3.5",
-    "jade": "*"
+    "jade": "~0.35.0",
+    "express": "~3.4.7"
   }
 }
