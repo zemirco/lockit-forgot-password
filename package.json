@@ -23,7 +23,10 @@
   ],
   "dependencies": {
     "node-uuid": "~1.4.1",
-    "bcrypt": "~0.7.7"
+    "bcrypt": "~0.7.7",
+    "debug": "~0.7.3",
+    "ms": "~0.6.1",
+    "moment": "~2.4.0"
   },
   "devDependencies": {
     "supertest": "~0.7.1",
