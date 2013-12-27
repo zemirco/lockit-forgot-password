@@ -24,20 +24,20 @@
   "dependencies": {
     "node-uuid": "~1.4.1",
     "bcrypt": "~0.7.7",
-    "debug": "~0.7.3",
-    "ms": "~0.6.1",
-    "moment": "~2.4.0"
+    "ms": "~0.6.2",
+    "debug": "~0.7.4",
+    "moment": "~2.5.0"
   },
   "devDependencies": {
-    "supertest": "~0.7.1",
-    "should": "~1.2.2",
-    "grunt": "~0.4.1",
-    "grunt-contrib-jshint": "~0.6.4",
-    "grunt-mocha-test": "~0.7.0",
-    "lockit-couchdb-adapter": "0.0.3",
-    "lockit-sendmail": "0.0.4",
-    "nano": "~4.1.1",
-    "jade": "~0.35.0",
-    "express": "~3.4.7"
+    "lockit-couchdb-adapter": "0.0.4",
+    "lockit-sendmail": "0.1.0",
+    "express": "~3.4.7",
+    "should": "~2.1.1",
+    "supertest": "~0.8.2",
+    "grunt-mocha-test": "~0.8.1",
+    "grunt-contrib-jshint": "~0.8.0",
+    "grunt": "~0.4.2",
+    "nano": "~4.2.1",
+    "jade": "~1.0.0"
   }
 }
