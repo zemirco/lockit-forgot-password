@@ -1,6 +1,6 @@
 {
   "name": "lockit-forgot-password",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "forgot password middleware for lockit",
   "main": "index.js",
   "scripts": {
