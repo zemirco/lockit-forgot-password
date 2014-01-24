@@ -11,20 +11,32 @@ exports.emailSettings = {
   }
 };
 
+// signup settings
+exports.signup = {
+  tokenExpiration: '1 day'
+};
+
 // forgot password settings
-exports.forgotPasswordRoute = '/forgot-password';
-exports.forgotPasswordTokenExpiration = '1 day';
+exports.forgotPassword = {
+  route: '/forgot-password',
+  tokenExpiration: '1 day',
+  views: {
+    forgotPassword: '', // input field 'email' | POST /'forgotPassword.route' | local variable 'error'
+    newPassword: '',    // input field 'password' | POST /'forgotPassword.route'/#{token} | local variable 'error'
+    changedPassword: '',// message that password has been changed successfully
+    linkExpired: '',    // message that link has expired and maybe link to /'forgotPassword.route'
+    sentEmail: ''       // message that email with token has been sent
+  }
+};
 
 // settings for test
-exports.db = 'couchdb';
-exports.dbUrl = 'http://127.0.0.1:5984/test';
+exports.db = 'http://127.0.0.1:5984/test';
 
 exports.emailTemplate = 'lockit-template-blank';
 
 // email signup template
 exports.emailSignup = {
   subject: 'Welcome to <%- appname %>',
-  title: 'Welcome to <%- appname %>',
   text: [
     '<h2>Hello <%- username %></h2>',
     'Welcome to <%- appname %>.',
@@ -36,7 +48,6 @@ exports.emailSignup = {
 // signup process -> email already taken
 exports.emailSignupTaken = {
   subject: 'Email already registered',
-  title: 'Email already registered',
   text: [
     '<h2>Hello <%- username %></h2>',
     'you or someone else tried to sign up for <%- appname %>.',
@@ -49,7 +60,6 @@ exports.emailSignupTaken = {
 // signup process -> resend email with verification link
 exports.emailResendVerification = {
   subject: 'Complete your registration',
-  title: 'Complete your registration',
   text: [
     '<h2>Hello <%- username %></h2>',
     'here is the link again. <%- link %> to complete your registration.',
@@ -61,7 +71,6 @@ exports.emailResendVerification = {
 // forgot password
 exports.emailForgotPassword = {
   subject: 'Reset your password',
-  title: 'Reset your password',
   text: [
     '<h2>Hey <%- username %></h2>',
     '<%- link %> to reset your password.',
