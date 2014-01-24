@@ -28,7 +28,7 @@
     "debug": "~0.7.4",
     "moment": "~2.5.0",
     "lockit-template-blank": "~0.0.1",
-    "lockit-sendmail": "0.1.0"
+    "lockit-sendmail": "0.1.1"
   },
   "devDependencies": {
     "express": "~3.4.7",
