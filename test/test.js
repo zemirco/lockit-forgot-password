@@ -2,18 +2,33 @@
 var request = require('supertest');
 var should = require('should');
 var uuid = require('node-uuid');
+var utls = require('lockit-utils');
 
+// normal app with default config and default views
 var config = require('./config.js');
 var app = require('./app.js')(config);
 
 // clone config object
-var configAlt = JSON.parse(JSON.stringify(config));
-// set some custom properties
-configAlt.port = 4000;
-configAlt.forgotPasswordTokenExpiration = 10;
-var appAlt = require('./app.js')(configAlt);
+var config_2 = JSON.parse(JSON.stringify(config));
+// set some custom properties - for testing link expiration
+config_2.port = 4000;
+config_2.forgotPassword.tokenExpiration = 10;
+var app_2 = require('./app.js')(config_2);
 
-var adapter = require('lockit-' + config.db + '-adapter')(config);
+// testing custom views
+var config_3 = JSON.parse(JSON.stringify(config));
+config_3.port = 5000;
+config_3.forgotPassword.views = {
+  forgotPassword: 'custom/forgotPassword',
+  newPassword: 'custom/newPassword',
+  changedPassword: 'custom/changedPassword',
+  linkExpired: 'custom/linkExpired',
+  sentEmail: 'custom/sentEmail'
+};
+var app_3 = require('./app.js')(config_3);
+
+var db = utls.getDatabase(config);
+var adapter = require(db.adapter)(config);
 
 // add a dummy user to db
 before(function(done) {
@@ -43,6 +58,15 @@ describe('forgot-password', function() {
         });
     });
 
+    it('should work with custom views', function(done) {
+      request(app_3)
+        .get('/forgot-password')
+        .end(function(err, res) {
+          res.text.should.include('Too bad you forgot your password!');
+          done();
+        });
+    });
+
   });
   
   describe('POST /forgot-password', function() {
@@ -54,6 +78,17 @@ describe('forgot-password', function() {
         .end(function(error, res) {
           res.statusCode.should.equal(403);
           res.text.should.include('Email is invalid');
+          done();
+        });
+    });
+
+    // test the error view
+    it('should work with custom view when something is wrong', function(done) {
+      request(app_3)
+        .post('/forgot-password')
+        .send({email: 'johnwayne.com'})
+        .end(function(error, res) {
+          res.text.should.include('Too bad you forgot your password!');
           done();
         });
     });
@@ -78,6 +113,17 @@ describe('forgot-password', function() {
           res.statusCode.should.equal(200);
           res.text.should.include('Email with link for password reset sent.');
           res.text.should.include('<title>Forgot password</title>');
+          done();
+        });
+    });
+
+    // test the success view
+    it('should work with custom views', function(done) {
+      request(app_3)
+        .post('/forgot-password')
+        .send({email: 'jim@wayne.com'})
+        .end(function(error, res) {
+          res.text.should.include('You\'ve got mail');
           done();
         });
     });
@@ -110,7 +156,7 @@ describe('forgot-password', function() {
     it('should render the link expired template when token has expired', function(done) {
 
       // create token
-      request(appAlt)
+      request(app_2)
         .post('/forgot-password')
         .send({email: 'steve@email.com'})
         .end(function(error, res) {
@@ -136,20 +182,50 @@ describe('forgot-password', function() {
     
     it('should render a form to enter the new password', function(done) {
 
-      // get valid token from db
-      adapter.find('username', 'john', function(err, user) {
-        if (err) console.log(err);
+      // create token
+      request(app)
+        .post('/forgot-password')
+        .send({email: 'steve@email.com'})
+        .end(function(error, res) {
 
-        // make request with valid token
-        request(app)
-          .get('/forgot-password/' + user.pwdResetToken)
-          .end(function(err, res) {
-            res.statusCode.should.equal(200);
-            res.text.should.include('Create a new password');
-            res.text.should.include('<title>Choose a new password</title>');
-            done();
+          // get token from db
+          adapter.find('username', 'steve', function(err, user) {
+            if (err) console.log(err);
+
+            // use GET request
+            request(app)
+              .get('/forgot-password/' + user.pwdResetToken)
+              .end(function(err, res) {
+                res.text.should.include('Create a new password');
+                done();
+              });
           });
-      });
+
+        });
+
+    });
+
+    it('should work with custom views', function(done) {
+
+      request(app_3)
+        .post('/forgot-password')
+        .send({email: 'steve@email.com'})
+        .end(function(error, res) {
+
+          // get token from db
+          adapter.find('username', 'steve', function(err, user) {
+            if (err) console.log(err);
+
+            // use GET request
+            request(app_3)
+              .get('/forgot-password/' + user.pwdResetToken)
+              .end(function(err, res) {
+                res.text.should.include('Just choose a new one.');
+                done();
+              });
+          });
+
+        });
 
     });
     
@@ -166,6 +242,18 @@ describe('forgot-password', function() {
           res.statusCode.should.equal(403);
           res.text.should.include('Please enter a password');
           res.text.should.include('<title>Choose a new password</title>');
+          done();
+        });
+    });
+    
+    // error view
+    it('should work with custom views', function(done) {
+      var token = uuid.v4();
+      request(app_3)
+        .post('/forgot-password/' + token)
+        .send({password: ''})
+        .end(function(err, res) {
+          res.text.should.include('Too bad you forgot your password!');
           done();
         });
     });
@@ -196,7 +284,7 @@ describe('forgot-password', function() {
     it('should render the link expired template when token has expired', function(done) {
 
       // create token
-      request(appAlt)
+      request(app_2)
         .post('/forgot-password')
         .send({email: 'steve@email.com'})
         .end(function(error, res) {
@@ -213,6 +301,33 @@ describe('forgot-password', function() {
                 res.statusCode.should.equal(200);
                 res.text.should.include('This link has expired');
                 res.text.should.include('<title>Forgot password - Link expired</title>');
+                done();
+              });
+          });
+
+        });
+
+    });
+
+    // custom link expired template
+    it('should render custom link expired template', function(done) {
+
+      // create token
+      request(app_2)
+        .post('/forgot-password')
+        .send({email: 'steve@email.com'})
+        .end(function(error, res) {
+
+          // get token from db
+          adapter.find('username', 'steve', function(err, user) {
+            if (err) console.log(err);
+
+            // use token from db for POST request
+            request(app_3)
+              .post('/forgot-password/' + user.pwdResetToken)
+              .send({password: 'something'})
+              .end(function(err, res) {
+                res.text.should.include('No no no! Not valid anymore.');
                 done();
               });
           });
@@ -238,6 +353,31 @@ describe('forgot-password', function() {
             done();
           });
       });
+    });
+
+    it('should render custom success view', function(done) {
+
+      // create token
+      request(app_3)
+        .post('/forgot-password')
+        .send({email: 'steve@email.com'})
+        .end(function(error, res) {
+
+          // get token from db
+          adapter.find('username', 'steve', function(err, user) {
+            if (err) console.log(err);
+
+            // use token from db for POST request
+            request(app_3)
+              .post('/forgot-password/' + user.pwdResetToken)
+              .send({password: 'something'})
+              .end(function(err, res) {
+                res.text.should.include('Well done, bro!');
+                done();
+              });
+          });
+
+        });
     });
     
   });
