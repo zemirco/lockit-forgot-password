@@ -4,21 +4,32 @@ var uuid = require('node-uuid');
 var bcrypt = require('bcrypt');
 var ms = require('ms');
 var moment = require('moment');
+var utls = require('lockit-utils');
 
 var debug = require('debug')('lockit-forgot-password');
 
 module.exports = function(app, config) {
-  
-  var adapter = require('lockit-' + config.db + '-adapter')(config);
+
+  var db = utls.getDatabase(config);
+
+  // load additional modules
+  var adapter = require(db.adapter)(config);  
   var Mail = require('lockit-sendmail')(config);
 
+  // shorten config
+  var cfg = config.forgotPassword;
+
   // set default route
-  var route = config.forgotPasswordRoute || '/forgot-password';
+  var route = cfg.route || '/forgot-password';
 
   // GET /forgot-password
   app.get(route, function(req, res) {
     debug('rendering GET %s', route);
-    res.render(path.join(__dirname, 'views', 'get-forgot-password'), {
+
+    // custom or built-in view
+    var view = cfg.views.forgotPassword || path.join(__dirname, 'views', 'get-forgot-password');
+    
+    res.render(view, {
       title: 'Forgot password'
     });
   });
@@ -35,8 +46,12 @@ module.exports = function(app, config) {
     // check for valid input
     if (!email || !email.match(EMAIL_REGEXP)) {
       debug('Invalid input value: Email is invalid');
+
+      // custom or built-in view
+      var errorView = cfg.views.forgotPassword || path.join(__dirname, 'views', 'get-forgot-password');
+      
       response.status(403);
-      response.render(path.join(__dirname, 'views', 'get-forgot-password'), {
+      response.render(errorView, {
         title: 'Forgot password',
         error: 'Email is invalid'
       });
@@ -48,11 +63,14 @@ module.exports = function(app, config) {
     // look for user in db
     adapter.find('email', email, function(err, user) {
       if (err) console.log(err);
+
+      // custom or built-in view
+      var view = cfg.views.sentEmail || path.join(__dirname, 'views', 'post-forgot-password');
       
       // no user found -> pretend we sent an email
       if (!user) {
         debug('No user found. Pretend to send an email');
-        response.render(path.join(__dirname, 'views', 'post-forgot-password'), {
+        response.render(view, {
           title: 'Forgot password'
         });
         return;
@@ -65,7 +83,7 @@ module.exports = function(app, config) {
       user.pwdResetToken = token;
       
       // set expiration date for password reset token
-      var timespan = ms(config.forgotPasswordTokenExpiration);      
+      var timespan = ms(cfg.tokenExpiration);      
       user.pwdResetTokenExpires = moment().add(timespan, 'ms').toDate();
       
       // update user in db
@@ -76,7 +94,7 @@ module.exports = function(app, config) {
         var mail = new Mail('emailForgotPassword');
         mail.send(user.username, user.email, token, function(err, res) {
           if (err) console.log(err);
-          response.render(path.join(__dirname, 'views', 'post-forgot-password'), {
+          response.render(view, {
             title: 'Forgot password'
           });
         });
@@ -120,8 +138,11 @@ module.exports = function(app, config) {
         adapter.update(user, function(err, user) {
           if (err) console.log(err);
 
+          // custom or built-in view
+          var view = cfg.views.linkExpired || path.join(__dirname, 'views', 'link-expired');
+
           // tell user that link has expired
-          res.render(path.join(__dirname, 'views', 'link-expired'), {
+          res.render(view, {
             title: 'Forgot password - Link expired'
           });
 
@@ -129,9 +150,12 @@ module.exports = function(app, config) {
 
         return;
       }
+
+      // custom or built-in view
+      var view = cfg.views.newPassword || path.join(__dirname, 'views', 'get-new-password');
       
       // render success message
-      res.render(path.join(__dirname, 'views', 'get-new-password'), {
+      res.render(view, {
         token: token,
         title: 'Choose a new password'
       });
@@ -158,8 +182,12 @@ module.exports = function(app, config) {
     // check for valid input
     if (!password) {
       debug('Password missing');
+
+      // custom or built-in view
+      var view = cfg.views.forgotPassword || path.join(__dirname, 'views', 'get-forgot-password');
+      
       res.status(403);
-      res.render(path.join(__dirname, 'views', 'get-forgot-password'), {
+      res.render(view, {
         title: 'Choose a new password',
         error: 'Please enter a password',
         token: token
@@ -185,8 +213,11 @@ module.exports = function(app, config) {
         adapter.update(user, function(err, user) {
           if (err) console.log(err);
 
+          // custom or built-in view
+          var view = cfg.views.linkExpired || path.join(__dirname, 'views', 'link-expired');
+
           // tell user that link has expired
-          res.render(path.join(__dirname, 'views', 'link-expired'), {
+          res.render(view, {
             title: 'Forgot password - Link expired'
           });
 
@@ -209,9 +240,12 @@ module.exports = function(app, config) {
         // update user in db
         adapter.update(user, function(err, user) {
           if (err) console.log(err);
+
+          // custom or built-in view
+          var view = cfg.views.changedPassword || path.join(__dirname, 'views', 'change-password-success');
           
           // render success message
-          res.render(path.join(__dirname, 'views', 'change-password-success'), {
+          res.render(view, {
             title: 'Password changed'
           });
           
