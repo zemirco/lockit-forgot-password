@@ -1,4 +1,3 @@
-
 var path = require('path');
 var uuid = require('node-uuid');
 var bcrypt = require('bcrypt');
@@ -77,9 +76,8 @@ module.exports = function(app, config) {
       }
       
       // user found in db
-      // delete old password and send link with setting new password page
+      // send link with setting new password page
       var token = uuid.v4();
-      delete user.hash;
       user.pwdResetToken = token;
       
       // set expiration date for password reset token
