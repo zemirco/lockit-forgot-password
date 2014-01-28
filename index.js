@@ -90,9 +90,9 @@ module.exports = function(app, config) {
       }
 
       // user found in db
-      // delete old password and send link with setting new password page
+      // do not delete old password as it might be someone else 
+      // send link with setting new password page
       var token = uuid.v4();
-      delete user.hash;
       user.pwdResetToken = token;
 
       // set expiration date for password reset token
