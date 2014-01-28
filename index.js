@@ -21,21 +21,34 @@ module.exports = function(app, config) {
 
   // set default route
   var route = cfg.route || '/forgot-password';
+  
+  /**
+   * Routes 
+   */
 
-  // GET /forgot-password
-  app.get(route, function(req, res) {
+  app.get(route, getForgot);
+  app.post(route, postForgot);
+  app.get(route + '/:token', getToken);
+  app.post(route + '/:token', postToken);
+
+  /**
+   * Route handlers 
+   */
+  
+  // GET /forgot-password  
+  function getForgot(req, res) {
     debug('rendering GET %s', route);
 
     // custom or built-in view
     var view = cfg.views.forgotPassword || path.join(__dirname, 'views', 'get-forgot-password');
-    
+
     res.render(view, {
       title: 'Forgot password'
     });
-  });
+  }
   
   // POST /forgot-password
-  app.post(route, function(req, response) {
+  function postForgot(req, response) {
     debug('receiving data via POST request to %s: %j', route, req.body);
     var email = req.body.email;
 
@@ -49,7 +62,7 @@ module.exports = function(app, config) {
 
       // custom or built-in view
       var errorView = cfg.views.forgotPassword || path.join(__dirname, 'views', 'get-forgot-password');
-      
+
       response.status(403);
       response.render(errorView, {
         title: 'Forgot password',
@@ -57,16 +70,16 @@ module.exports = function(app, config) {
       });
       return;
     }
-    
+
     // looks like given email address has the correct format
-    
+
     // look for user in db
     adapter.find('email', email, function(err, user) {
       if (err) console.log(err);
 
       // custom or built-in view
       var view = cfg.views.sentEmail || path.join(__dirname, 'views', 'post-forgot-password');
-      
+
       // no user found -> pretend we sent an email
       if (!user) {
         debug('No user found. Pretend to send an email');
@@ -75,17 +88,17 @@ module.exports = function(app, config) {
         });
         return;
       }
-      
+
       // user found in db
       // delete old password and send link with setting new password page
       var token = uuid.v4();
       delete user.hash;
       user.pwdResetToken = token;
-      
+
       // set expiration date for password reset token
-      var timespan = ms(cfg.tokenExpiration);      
+      var timespan = ms(cfg.tokenExpiration);
       user.pwdResetTokenExpires = moment().add(timespan, 'ms').toDate();
-      
+
       // update user in db
       adapter.update(user, function(err, res) {
         if (err) console.log(err);
@@ -98,19 +111,18 @@ module.exports = function(app, config) {
             title: 'Forgot password'
           });
         });
-        
+
       });
-      
+
     });
-    
-  });
+  }
   
-  // GET /forgot-password/:token
-  app.get(route + '/:token', function(req, res, next) {
+  // GET /forgot-password/:token  
+  function getToken(req, res, next) {
     debug('rendering GET %s/:token', route);
     // get token from url
     var token = req.params.token;
-    
+
     // verify format of token
     var re = new RegExp('[0-9a-f]{22}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', 'i');
 
@@ -119,14 +131,14 @@ module.exports = function(app, config) {
       debug('Token has invalid format');
       return next();
     }
-    
+
     // check if we have a user with that token
     adapter.find('pwdResetToken', token, function(err, user) {
       if (err) console.log(err);
 
       // if no user is found forward to error handling middleware
       if (!user) return next();
-      
+
       // check if token has expired
       if (new Date(user.pwdResetTokenExpires) < new Date()) {
         debug('Token has expired');
@@ -153,19 +165,18 @@ module.exports = function(app, config) {
 
       // custom or built-in view
       var view = cfg.views.newPassword || path.join(__dirname, 'views', 'get-new-password');
-      
+
       // render success message
       res.render(view, {
         token: token,
         title: 'Choose a new password'
       });
-      
+
     });
-    
-  });
+  }
   
-  // POST /forgot-password/:token
-  app.post(route + '/:token', function(req, res, next) {
+  // POST /forgot-password/:token  
+  function postToken(req, res, next) {
     debug('receiving data via POST request to %s/:token: %j', route, req.body);
     var password = req.body.password;
     var token = req.params.token;
@@ -185,7 +196,7 @@ module.exports = function(app, config) {
 
       // custom or built-in view
       var view = cfg.views.forgotPassword || path.join(__dirname, 'views', 'get-forgot-password');
-      
+
       res.status(403);
       res.render(view, {
         title: 'Choose a new password',
@@ -194,7 +205,7 @@ module.exports = function(app, config) {
       });
       return;
     }
-    
+
     // check for token in db
     adapter.find('pwdResetToken', token, function(err, user) {
       if (err) console.log(err);
@@ -225,37 +236,36 @@ module.exports = function(app, config) {
 
         return;
       }
-      
+
       // create hash for new password
       bcrypt.hash(password, 10, function(err, hash) {
         if (err) console.log(err);
-        
+
         // update user's credentials
         user.hash = hash;
-        
+
         // remove helper properties
         delete user.pwdResetToken;
         delete user.pwdResetTokenExpires;
-        
+
         // update user in db
         adapter.update(user, function(err, user) {
           if (err) console.log(err);
 
           // custom or built-in view
           var view = cfg.views.changedPassword || path.join(__dirname, 'views', 'change-password-success');
-          
+
           // render success message
           res.render(view, {
             title: 'Password changed'
           });
-          
+
         });
 
       });
-      
+
 
     });
-    
-  });
+  }
   
 };
