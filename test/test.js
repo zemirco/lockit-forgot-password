@@ -27,6 +27,12 @@ config_3.forgotPassword.views = {
 };
 var app_3 = require('./app.js')(config_3);
 
+// testing the rest api
+var config_4 = JSON.parse(JSON.stringify(config));
+config_4.port = 6000;
+config_4.rest = true;
+var app_4 = require('./app.js')(config_4);
+
 var db = utls.getDatabase(config);
 var adapter = require(db.adapter)(config);
 
@@ -36,7 +42,10 @@ before(function(done) {
     if (err) console.log(err);
     adapter.save('steve', 'steve@email.com', 'password', function(err, user) {
       if (err) console.log(err);
-      done();
+      adapter.save('rest', 'rest@email.com', 'password', function(err, user) {
+        if (err) console.log(err);
+        done();
+      });
     });
 
   });
@@ -67,6 +76,15 @@ describe('forgot-password', function() {
         });
     });
 
+    it('should be forwarded to error handling middleware when rest is active', function(done) {
+      request(app_4)
+        .get('/rest/forgot-password')
+        .end(function(err, res) {
+//          res.statusCode.should.equal(404);
+          done();
+        });
+    });
+
   });
   
   describe('POST /forgot-password', function() {
@@ -78,6 +96,17 @@ describe('forgot-password', function() {
         .end(function(error, res) {
           res.statusCode.should.equal(403);
           res.text.should.include('Email is invalid');
+          done();
+        });
+    });
+
+    it('should return an error when email has invalid format (REST)', function(done) {
+      request(app_4)
+        .post('/rest/forgot-password')
+        .send({email: 'johnwayne.com'})
+        .end(function(error, res) {
+          res.statusCode.should.equal(403);
+          res.text.should.equal('{"error":"Email is invalid"}');
           done();
         });
     });
@@ -105,6 +134,17 @@ describe('forgot-password', function() {
         });
     });
 
+    it('should render a success message when no user was found (REST)', function(done) {
+      request(app_4)
+        .post('/rest/forgot-password')
+        .send({email: 'jim@wayne.com'})
+        .end(function(error, res) {
+          res.statusCode.should.equal(200);
+          res.text.should.equal('OK');
+          done();
+        });
+    });
+
     it('should render a success message when email was sent', function(done) {
       request(app)
         .post('/forgot-password')
@@ -113,6 +153,17 @@ describe('forgot-password', function() {
           res.statusCode.should.equal(200);
           res.text.should.include('Email with link for password reset sent.');
           res.text.should.include('<title>Forgot password</title>');
+          done();
+        });
+    });
+
+    it('should render a success message when email was sent (REST)', function(done) {
+      request(app_4)
+        .post('/rest/forgot-password')
+        .send({email: 'rest@email.com'})
+        .end(function(error, res) {
+          res.statusCode.should.equal(200);
+          res.text.should.equal('OK');
           done();
         });
     });
@@ -142,6 +193,15 @@ describe('forgot-password', function() {
         });
     });
 
+    it('should forward to error handling middleware when token has invalid format (REST)', function(done) {
+      request(app_4)
+        .get('/rest/forgot-password/some-test-token-123')
+        .end(function(err, res) {
+          res.statusCode.should.equal(404);
+          done();
+        });
+    });
+
     it('should forward to error handling middleware when no user for token is found', function(done) {
       var token = uuid.v4();
       request(app)
@@ -149,6 +209,16 @@ describe('forgot-password', function() {
         .end(function(err, res) {
           res.statusCode.should.equal(404);
           res.text.should.include('Cannot GET /forgot-password/' + token);
+          done();
+        });
+    });
+
+    it('should forward to error handling middleware when no user for token is found (REST)', function(done) {
+      var token = uuid.v4();
+      request(app)
+        .get('/rest/forgot-password/' + token)
+        .end(function(err, res) {
+          res.statusCode.should.equal(404);
           done();
         });
     });
@@ -179,6 +249,32 @@ describe('forgot-password', function() {
         });
 
     });
+
+    it('should render the link expired template when token has expired (REST)', function(done) {
+
+      // create token
+      request(app_2)
+          .post('/forgot-password')
+          .send({email: 'steve@email.com'})
+          .end(function(error, res) {
+
+            // get token from db
+            adapter.find('username', 'steve', function(err, user) {
+              if (err) console.log(err);
+
+              // use GET request
+              request(app_4)
+                  .get('/rest/forgot-password/' + user.pwdResetToken)
+                  .end(function(err, res) {
+                    res.statusCode.should.equal(403);
+                    res.text.should.equal('{"error":"link expired"}');
+                    done();
+                  });
+            });
+
+          });
+
+    });
     
     it('should render a form to enter the new password', function(done) {
 
@@ -202,6 +298,32 @@ describe('forgot-password', function() {
           });
 
         });
+
+    });
+
+    it('should render a form to enter the new password (REST)', function(done) {
+
+      // create token
+      request(app)
+          .post('/forgot-password')
+          .send({email: 'steve@email.com'})
+          .end(function(error, res) {
+
+            // get token from db
+            adapter.find('username', 'steve', function(err, user) {
+              if (err) console.log(err);
+
+              // use GET request
+              request(app_4)
+                  .get('/rest/forgot-password/' + user.pwdResetToken)
+                  .end(function(err, res) {
+                    res.statusCode.should.equal(200);
+                    res.text.should.equal('OK');
+                    done();
+                  });
+            });
+
+          });
 
     });
 
@@ -242,6 +364,18 @@ describe('forgot-password', function() {
           res.statusCode.should.equal(403);
           res.text.should.include('Please enter a password');
           res.text.should.include('<title>Choose a new password</title>');
+          done();
+        });
+    });
+
+    it('should return with an error message when password is empty (REST)', function(done) {
+      var token = uuid.v4();
+      request(app_4)
+        .post('/rest/forgot-password/' + token)
+        .send({password: ''})
+        .end(function(err, res) {
+          res.statusCode.should.equal(403);
+          res.text.should.equal('{"error":"Please enter a password"}');
           done();
         });
     });
@@ -309,6 +443,33 @@ describe('forgot-password', function() {
 
     });
 
+    it('should render the link expired template when token has expired (REST)', function(done) {
+
+      // create token
+      request(app_2)
+        .post('/forgot-password')
+        .send({email: 'steve@email.com'})
+        .end(function(error, res) {
+
+          // get token from db
+          adapter.find('username', 'steve', function(err, user) {
+            if (err) console.log(err);
+
+            // use token from db for POST request
+            request(app_4)
+              .post('/rest/forgot-password/' + user.pwdResetToken)
+              .send({password: 'something'})
+              .end(function(err, res) {
+                res.statusCode.should.equal(403);
+                res.text.should.equal('{"error":"link expired"}');
+                done();
+              });
+          });
+
+        });
+
+    });
+
     // custom link expired template
     it('should render custom link expired template', function(done) {
 
@@ -355,6 +516,32 @@ describe('forgot-password', function() {
       });
     });
 
+    it('should render a success message when everything is fine (REST)', function(done) {
+
+      // create token
+      request(app)
+        .post('/forgot-password')
+        .send({email: 'rest@email.com'})
+        .end(function(error, res) {
+
+          // get token from db
+          adapter.find('username', 'rest', function(err, user) {
+            if (err) console.log(err);
+
+            // use token from db for POST request
+            request(app_4)
+              .post('/rest/forgot-password/' + user.pwdResetToken)
+              .send({password: 'something'})
+              .end(function(err, res) {
+                res.statusCode.should.equal(200);
+                res.text.should.equal('OK');
+                done();
+              });
+          });
+
+        });
+    });
+
     it('should render custom success view', function(done) {
 
       // create token
@@ -391,7 +578,10 @@ after(function(done) {
     if (err) console.log(err);
     adapter.remove('username', 'steve', function(err) {
       if (err) console.log(err);
-      done();
+      adapter.remove('username', 'rest', function(err) {
+        if (err) console.log(err);
+        done();
+      });
     });
   });
 
