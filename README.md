@@ -50,6 +50,16 @@ More about configuration at [Lockit](https://github.com/zeMirco/lockit).
  - POST /forgot-password
  - GET /forgot-password/:token
  - POST /forgot-password/:token
+ 
+## REST API
+
+If you've set `exports.rest = true` in your `config.js` the module behaves as follows.
+
+ - all routes have `/rest` prepended
+ - `GET /rest/forgot-password` is `next()`ed and you can catch `/forgot-password` on the client
+ - `POST /rest/forgot-password` stays the same but sends JSON
+ - `GET /rest/forgot-password/:token` sends JSON and you can catch `/forgot-password/:token` on the client
+ - `POST /rest/forgot-password/:token` sends JSON
 
 ## Test
 
