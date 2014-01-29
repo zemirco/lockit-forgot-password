@@ -8,6 +8,18 @@ var utls = require('lockit-utils');
 
 var debug = require('debug')('lockit-forgot-password');
 
+/**
+ * Internal helper functions
+ */
+
+function join(view) {
+  return path.join(__dirname, 'views', view);
+}
+
+/**
+ * Let's get serious
+ */
+
 module.exports = function(app, config) {
 
   var db = utls.getDatabase(config);
@@ -21,6 +33,9 @@ module.exports = function(app, config) {
 
   // set default route
   var route = cfg.route || '/forgot-password';
+  
+  // add prefix when rest is active
+  if (config.rest) route = '/rest' + route;
   
   /**
    * Routes 
@@ -36,11 +51,14 @@ module.exports = function(app, config) {
    */
   
   // GET /forgot-password  
-  function getForgot(req, res) {
+  function getForgot(req, res, next) {
     debug('rendering GET %s', route);
 
+    // do not handle the route when REST is active
+    if (config.rest) return next();
+
     // custom or built-in view
-    var view = cfg.views.forgotPassword || path.join(__dirname, 'views', 'get-forgot-password');
+    var view = cfg.views.forgotPassword || join('get-forgot-password');
 
     res.render(view, {
       title: 'Forgot password'
@@ -59,14 +77,18 @@ module.exports = function(app, config) {
     // check for valid input
     if (!email || !email.match(EMAIL_REGEXP)) {
       debug('Invalid input value: Email is invalid');
+      error = 'Email is invalid';
+      
+      // send only JSON when REST is active
+      if (config.rest) return response.json(403, {error: error});
 
       // custom or built-in view
-      var errorView = cfg.views.forgotPassword || path.join(__dirname, 'views', 'get-forgot-password');
+      var errorView = cfg.views.forgotPassword || join('get-forgot-password');
 
       response.status(403);
       response.render(errorView, {
         title: 'Forgot password',
-        error: 'Email is invalid'
+        error: error
       });
       return;
     }
@@ -78,11 +100,15 @@ module.exports = function(app, config) {
       if (err) console.log(err);
 
       // custom or built-in view
-      var view = cfg.views.sentEmail || path.join(__dirname, 'views', 'post-forgot-password');
+      var view = cfg.views.sentEmail || join('post-forgot-password');
 
       // no user found -> pretend we sent an email
       if (!user) {
         debug('No user found. Pretend to send an email');
+
+        // send only JSON when REST is active
+        if (config.rest) return response.send(200);
+        
         response.render(view, {
           title: 'Forgot password'
         });
@@ -107,6 +133,10 @@ module.exports = function(app, config) {
         var mail = new Mail('emailForgotPassword');
         mail.send(user.username, user.email, token, function(err, res) {
           if (err) console.log(err);
+
+          // send only JSON when REST is active
+          if (config.rest) return response.send(200);
+          
           response.render(view, {
             title: 'Forgot password'
           });
@@ -150,8 +180,11 @@ module.exports = function(app, config) {
         adapter.update(user, function(err, user) {
           if (err) console.log(err);
 
+          // send only JSON when REST is active
+          if (config.rest) return res.json(403, {error: 'link expired'});
+
           // custom or built-in view
-          var view = cfg.views.linkExpired || path.join(__dirname, 'views', 'link-expired');
+          var view = cfg.views.linkExpired || join('link-expired');
 
           // tell user that link has expired
           res.render(view, {
@@ -163,8 +196,11 @@ module.exports = function(app, config) {
         return;
       }
 
+      // send only JSON when REST is active
+      if (config.rest) return res.send(200);
+
       // custom or built-in view
-      var view = cfg.views.newPassword || path.join(__dirname, 'views', 'get-new-password');
+      var view = cfg.views.newPassword || join('get-new-password');
 
       // render success message
       res.render(view, {
@@ -180,6 +216,8 @@ module.exports = function(app, config) {
     debug('receiving data via POST request to %s/:token: %j', route, req.body);
     var password = req.body.password;
     var token = req.params.token;
+    
+    var error = '';
 
     // verify format of token
     var re = new RegExp('[0-9a-f]{22}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', 'i');
@@ -193,14 +231,18 @@ module.exports = function(app, config) {
     // check for valid input
     if (!password) {
       debug('Password missing');
+      error = 'Please enter a password';
+      
+      // send only JSON when REST is active
+      if (config.rest) return res.json(403, {error: error});
 
       // custom or built-in view
-      var view = cfg.views.forgotPassword || path.join(__dirname, 'views', 'get-forgot-password');
+      var view = cfg.views.forgotPassword || join('get-forgot-password');
 
       res.status(403);
       res.render(view, {
         title: 'Choose a new password',
-        error: 'Please enter a password',
+        error: error,
         token: token
       });
       return;
@@ -224,8 +266,11 @@ module.exports = function(app, config) {
         adapter.update(user, function(err, user) {
           if (err) console.log(err);
 
+          // send only JSON when REST is active
+          if (config.rest) return res.json(403, {error: 'link expired'});
+
           // custom or built-in view
-          var view = cfg.views.linkExpired || path.join(__dirname, 'views', 'link-expired');
+          var view = cfg.views.linkExpired || join('link-expired');
 
           // tell user that link has expired
           res.render(view, {
@@ -252,8 +297,11 @@ module.exports = function(app, config) {
         adapter.update(user, function(err, user) {
           if (err) console.log(err);
 
+          // send only JSON when REST is active
+          if (config.rest) return res.send(200);
+
           // custom or built-in view
-          var view = cfg.views.changedPassword || path.join(__dirname, 'views', 'change-password-success');
+          var view = cfg.views.changedPassword || join('change-password-success');
 
           // render success message
           res.render(view, {
