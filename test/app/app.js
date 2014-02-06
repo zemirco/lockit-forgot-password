@@ -12,7 +12,7 @@ var fs = require('fs');
 
 // require delete account middleware
 //var config = require('./config.js');
-var forgotPassword = require('../index.js');
+var forgotPassword = require('../../index.js');
 
 function start(config) {
 
@@ -35,6 +35,19 @@ function start(config) {
   app.use(express.cookieParser('your secret here'));
   app.use(express.cookieSession());
 
+  if (config.csrf) {
+    app.use(express.csrf());
+    app.use(function(req, res, next) {
+
+      var token = req.csrfToken();
+      res.locals._csrf = token;
+
+      // save token to a cookie so we can easily access it on the client
+      res.cookie('csrf', token);
+      next();
+    });
+  }
+  
 // set a dummy session for testing purpose
   app.use(function(req, res, next) {
     req.session.username = 'john';
