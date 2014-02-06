@@ -40,6 +40,7 @@
     "nano": "~4.2.1",
     "jade": "~1.0.0",
     "lockit-couchdb-adapter": "0.2.0",
-    "lockit-utils": "0.1.0"
+    "lockit-utils": "0.1.0",
+    "cookie": "~0.1.0"
   }
 }
