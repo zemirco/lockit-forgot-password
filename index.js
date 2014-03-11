@@ -6,8 +6,6 @@ var ms = require('ms');
 var moment = require('moment');
 var utls = require('lockit-utils');
 
-var debug = require('debug')('lockit-forgot-password');
-
 /**
  * Internal helper functions
  */
@@ -25,7 +23,7 @@ module.exports = function(app, config) {
   var db = utls.getDatabase(config);
 
   // load additional modules
-  var adapter = require(db.adapter)(config);  
+  var adapter = require(db.adapter)(config);
   var Mail = require('lockit-sendmail')(config);
 
   // shorten config
@@ -33,12 +31,12 @@ module.exports = function(app, config) {
 
   // set default route
   var route = cfg.route || '/forgot-password';
-  
+
   // add prefix when rest is active
   if (config.rest) route = '/rest' + route;
-  
+
   /**
-   * Routes 
+   * Routes
    */
 
   app.get(route, getForgot);
@@ -47,12 +45,11 @@ module.exports = function(app, config) {
   app.post(route + '/:token', postToken);
 
   /**
-   * Route handlers 
+   * Route handlers
    */
-  
-  // GET /forgot-password  
+
+  // GET /forgot-password
   function getForgot(req, res, next) {
-    debug('rendering GET %s', route);
 
     // do not handle the route when REST is active
     if (config.rest) return next();
@@ -64,10 +61,9 @@ module.exports = function(app, config) {
       title: 'Forgot password'
     });
   }
-  
+
   // POST /forgot-password
   function postForgot(req, response) {
-    debug('receiving data via POST request to %s: %j', route, req.body);
     var email = req.body.email;
 
     var error = null;
@@ -76,9 +72,8 @@ module.exports = function(app, config) {
 
     // check for valid input
     if (!email || !email.match(EMAIL_REGEXP)) {
-      debug('Invalid input value: Email is invalid');
       error = 'Email is invalid';
-      
+
       // send only JSON when REST is active
       if (config.rest) return response.json(403, {error: error});
 
@@ -104,11 +99,9 @@ module.exports = function(app, config) {
 
       // no user found -> pretend we sent an email
       if (!user) {
-        debug('No user found. Pretend to send an email');
-
         // send only JSON when REST is active
         if (config.rest) return response.send(200);
-        
+
         response.render(view, {
           title: 'Forgot password'
         });
@@ -116,7 +109,7 @@ module.exports = function(app, config) {
       }
 
       // user found in db
-      // do not delete old password as it might be someone else 
+      // do not delete old password as it might be someone else
       // send link with setting new password page
       var token = uuid.v4();
       user.pwdResetToken = token;
@@ -136,7 +129,7 @@ module.exports = function(app, config) {
 
           // send only JSON when REST is active
           if (config.rest) return response.send(200);
-          
+
           response.render(view, {
             title: 'Forgot password'
           });
@@ -146,10 +139,9 @@ module.exports = function(app, config) {
 
     });
   }
-  
-  // GET /forgot-password/:token  
+
+  // GET /forgot-password/:token
   function getToken(req, res, next) {
-    debug('rendering GET %s/:token', route);
     // get token from url
     var token = req.params.token;
 
@@ -157,10 +149,7 @@ module.exports = function(app, config) {
     var re = new RegExp('[0-9a-f]{22}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', 'i');
 
     // if format is wrong no need to query the database
-    if (!re.test(token)) {
-      debug('Token has invalid format');
-      return next();
-    }
+    if (!re.test(token)) return next();
 
     // check if we have a user with that token
     adapter.find('pwdResetToken', token, function(err, user) {
@@ -171,7 +160,6 @@ module.exports = function(app, config) {
 
       // check if token has expired
       if (new Date(user.pwdResetTokenExpires) < new Date()) {
-        debug('Token has expired');
         // make old token invalid
         delete user.pwdResetToken;
         delete user.pwdResetTokenExpires;
@@ -210,29 +198,24 @@ module.exports = function(app, config) {
 
     });
   }
-  
-  // POST /forgot-password/:token  
+
+  // POST /forgot-password/:token
   function postToken(req, res, next) {
-    debug('receiving data via POST request to %s/:token: %j', route, req.body);
     var password = req.body.password;
     var token = req.params.token;
-    
+
     var error = '';
 
     // verify format of token
     var re = new RegExp('[0-9a-f]{22}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', 'i');
 
     // if format is wrong no need to query the database
-    if (!re.test(token)) {
-      debug('Token has invalid format');
-      return next();
-    }
+    if (!re.test(token)) return next();
 
     // check for valid input
     if (!password) {
-      debug('Password missing');
       error = 'Please enter a password';
-      
+
       // send only JSON when REST is active
       if (config.rest) return res.json(403, {error: error});
 
@@ -257,7 +240,6 @@ module.exports = function(app, config) {
 
       // check if token has expired
       if (new Date(user.pwdResetTokenExpires) < new Date()) {
-        debug('Token has expired');
         // make old token invalid
         delete user.pwdResetToken;
         delete user.pwdResetTokenExpires;
@@ -315,5 +297,5 @@ module.exports = function(app, config) {
 
     });
   }
-  
+
 };
