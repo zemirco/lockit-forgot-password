@@ -1,4 +1,3 @@
-
 var path = require('path');
 var uuid = require('node-uuid');
 var bcrypt = require('bcrypt');
@@ -100,7 +99,7 @@ module.exports = function(app, config) {
       // no user found -> pretend we sent an email
       if (!user) {
         // send only JSON when REST is active
-        if (config.rest) return response.send(200);
+        if (config.rest) return response.send(204);
 
         response.render(view, {
           title: 'Forgot password'
@@ -128,7 +127,7 @@ module.exports = function(app, config) {
           if (err) console.log(err);
 
           // send only JSON when REST is active
-          if (config.rest) return response.send(200);
+          if (config.rest) return response.send(204);
 
           response.render(view, {
             title: 'Forgot password'
@@ -185,7 +184,7 @@ module.exports = function(app, config) {
       }
 
       // send only JSON when REST is active
-      if (config.rest) return res.send(200);
+      if (config.rest) return res.send(204);
 
       // custom or built-in view
       var view = cfg.views.newPassword || join('get-new-password');
@@ -280,7 +279,7 @@ module.exports = function(app, config) {
           if (err) console.log(err);
 
           // send only JSON when REST is active
-          if (config.rest) return res.send(200);
+          if (config.rest) return res.send(204);
 
           // custom or built-in view
           var view = cfg.views.changedPassword || join('change-password-success');
