@@ -62,8 +62,7 @@ describe('# rest enabled', function() {
         .post('/rest/forgot-password')
         .send({email: 'jim@wayne.com'})
         .end(function(error, res) {
-          res.statusCode.should.equal(200);
-          res.text.should.equal('OK');
+          res.statusCode.should.equal(204);
           done();
         });
     });
@@ -73,8 +72,7 @@ describe('# rest enabled', function() {
         .post('/rest/forgot-password')
         .send({email: 'rest@email.com'})
         .end(function(error, res) {
-          res.statusCode.should.equal(200);
-          res.text.should.equal('OK');
+          res.statusCode.should.equal(204);
           done();
         });
     });
@@ -134,8 +132,7 @@ describe('# rest enabled', function() {
             request(_app)
               .get('/rest/forgot-password/' + user.pwdResetToken)
               .end(function(err, res) {
-                res.statusCode.should.equal(200);
-                res.text.should.equal('OK');
+                res.statusCode.should.equal(204);
                 done();
               });
           });
@@ -192,8 +189,7 @@ describe('# rest enabled', function() {
               .post('/rest/forgot-password/' + user.pwdResetToken)
               .send({password: 'something'})
               .end(function(err, res) {
-                res.statusCode.should.equal(200);
-                res.text.should.equal('OK');
+                res.statusCode.should.equal(204);
                 done();
               });
           });
