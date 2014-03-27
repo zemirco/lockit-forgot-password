@@ -9,6 +9,7 @@ var user = require('./routes/user');
 var http = require('http');
 var path = require('path');
 var fs = require('fs');
+var lockitUtils = require('lockit-utils');
 
 // require delete account middleware
 //var config = require('./config.js');
@@ -23,7 +24,7 @@ function start(config) {
 // set basedir so views can properly extend layout.jade
   app.locals.basedir = __dirname + '/views'; // comment out and error returns
 
-// all environments
+  // all environments
   app.set('port', process.env.PORT || config.port || 3000);
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
@@ -49,19 +50,21 @@ function start(config) {
     });
   }
 
-// set a dummy session for testing purpose
+  // set a dummy session for testing purpose
   app.use(function(req, res, next) {
     req.session.username = 'john';
     next();
   });
 
-// use forgot password middleware with testing options
-  forgotPassword(app, config);
+  // use forgot password middleware with testing options
+  var db = lockitUtils.getDatabase(config);
+  var adapter = require(db.adapter)(config);
+  forgotPassword(app, config, adapter);
 
   app.use(app.router);
   app.use(express.static(path.join(__dirname, 'public')));
 
-// development only
+  // development only
   if ('development' == app.get('env')) {
     app.use(express.errorHandler());
   }
