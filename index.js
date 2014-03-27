@@ -4,7 +4,6 @@ var uuid = require('node-uuid');
 var bcrypt = require('bcrypt');
 var ms = require('ms');
 var moment = require('moment');
-var utls = require('lockit-utils');
 
 /**
  * Internal helper functions
@@ -18,12 +17,8 @@ function join(view) {
  * Let's get serious
  */
 
-module.exports = function(app, config) {
+module.exports = function(app, config, adapter) {
 
-  var db = utls.getDatabase(config);
-
-  // load additional modules
-  var adapter = require(db.adapter)(config);
   var Mail = require('lockit-sendmail')(config);
 
   // shorten config
