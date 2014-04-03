@@ -16,7 +16,7 @@ _config.forgotPassword.route = '/cannot-remember';
 var _app = app(_config);
 
 describe('#custom routes', function() {
-  
+
   before(function(done) {
     adapter.save('routes', 'routes@email.com', 'password', function() {
       adapter.find('username', 'routes', function(err, user) {
@@ -25,9 +25,9 @@ describe('#custom routes', function() {
       });
     });
   });
-  
+
   describe('GET /forgot-password', function() {
-    
+
     it('should work with custom routes', function(done) {
       request(_app)
         .get('/cannot-remember')
@@ -38,7 +38,7 @@ describe('#custom routes', function() {
           done();
         });
     });
-    
+
   });
 
   describe('POST /forgot-password', function() {
@@ -87,9 +87,9 @@ describe('#custom routes', function() {
     });
 
   });
-  
+
   after(function(done) {
-    adapter.remove('username', 'routes', done);
+    adapter.remove('routes', done);
   });
-  
+
 });

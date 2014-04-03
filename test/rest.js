@@ -199,8 +199,8 @@ describe('# rest enabled', function() {
   });
 
   after(function(done) {
-    adapter.remove('username', 'rest', function() {
-      adapter.remove('username', 'alan', done);
+    adapter.remove('rest', function() {
+      adapter.remove('alan', done);
     });
   });
 

@@ -19,15 +19,15 @@ var _config_two = JSON.parse(JSON.stringify(config));
 _config_two.port = 4000;
 _config_two.forgotPassword.tokenExpiration = '10 ms';
 var _app_two = app(_config_two);
-  
+
 describe('# default config', function() {
-  
+
   before(function(done) {
     adapter.save('john', 'john@email.com', 'password', function() {
       adapter.save('steve', 'steve@email.com', 'password', done);
     });
   });
-  
+
   describe('GET /forgot-password', function() {
 
     it('should use the default route when none is specified', function(done) {
@@ -40,9 +40,9 @@ describe('# default config', function() {
           done();
         });
     });
-    
+
   });
-  
+
   describe('POST /forgot-password', function() {
 
     it('should return an error when email has invalid format', function(done) {
@@ -79,9 +79,9 @@ describe('# default config', function() {
           done();
         });
     });
-    
+
   });
-  
+
   describe('GET /forgot-password/:token', function() {
 
     it('should forward to error handling middleware when token has invalid format', function(done) {
@@ -144,9 +144,9 @@ describe('# default config', function() {
           });
         });
     });
-    
+
   });
-  
+
   describe('POST /forgot-password/:token', function() {
 
     it('should return with an error message when password is empty', function(done) {
@@ -222,15 +222,15 @@ describe('# default config', function() {
           });
       });
     });
-    
-    
-    
+
+
+
   });
-  
+
   after(function(done) {
-    adapter.remove('username', 'john', function() {
-      adapter.remove('username', 'steve', done);
+    adapter.remove('john', function() {
+      adapter.remove('steve', done);
     });
   });
-  
+
 });

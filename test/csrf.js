@@ -73,7 +73,7 @@ describe('# csrf', function() {
   });
 
   after(function(done) {
-    adapter.remove('username', 'csrf', done);
+    adapter.remove('csrf', done);
   });
 
 });

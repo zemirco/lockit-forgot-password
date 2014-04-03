@@ -154,7 +154,7 @@ describe('# custom views', function() {
   });
 
   after(function(done) {
-    adapter.remove('username', 'custom', done);
+    adapter.remove('custom', done);
   });
 
 });
