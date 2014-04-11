@@ -1,7 +1,7 @@
 
 var path = require('path');
 var uuid = require('node-uuid');
-var bcrypt = require('bcrypt');
+var pwd = require('couch-pwd');
 var ms = require('ms');
 var moment = require('moment');
 
@@ -119,7 +119,7 @@ module.exports = function(app, config, adapter) {
 
         // send email with forgot password link
         var mail = new Mail('emailForgotPassword');
-        mail.send(user.username, user.email, token, function(err, res) {
+        mail.send(user.name, user.email, token, function(err, res) {
           if (err) console.log(err);
 
           // send only JSON when REST is active
@@ -259,12 +259,17 @@ module.exports = function(app, config, adapter) {
         return;
       }
 
+      // if user comes from couchdb it has an 'iterations' key
+      if (user.iterations) pwd.iterations(user.iterations);
+
       // create hash for new password
-      bcrypt.hash(password, 10, function(err, hash) {
+      // bcrypt.hash(password, 10, function(err, hash) {
+      pwd.hash(password, function(err, salt, hash) {
         if (err) console.log(err);
 
         // update user's credentials
-        user.hash = hash;
+        user.salt = salt;
+        user.derived_key = hash;
 
         // remove helper properties
         delete user.pwdResetToken;
