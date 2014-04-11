@@ -107,7 +107,7 @@ describe('# rest enabled', function() {
         .send({email: 'alan@email.com'})
         .end(function(error, res) {
           // get token from db
-          adapter.find('username', 'alan', function(err, user) {
+          adapter.find('name', 'alan', function(err, user) {
             // use GET request
             request(_app)
               .get('/rest/forgot-password/' + user.pwdResetToken)
@@ -127,7 +127,7 @@ describe('# rest enabled', function() {
         .send({email: 'rest@email.com'})
         .end(function(error, res) {
           // get token from db
-          adapter.find('username', 'rest', function(err, user) {
+          adapter.find('name', 'rest', function(err, user) {
             // use GET request
             request(_app)
               .get('/rest/forgot-password/' + user.pwdResetToken)
@@ -162,7 +162,7 @@ describe('# rest enabled', function() {
         .send({email: 'alan@email.com'})
         .end(function(error, res) {
           // get token from db
-          adapter.find('username', 'alan', function(err, user) {
+          adapter.find('name', 'alan', function(err, user) {
             // use token from db for POST request
             request(_app)
               .post('/rest/forgot-password/' + user.pwdResetToken)
@@ -183,7 +183,7 @@ describe('# rest enabled', function() {
         .send({email: 'rest@email.com'})
         .end(function(error, res) {
           // get token from db
-          adapter.find('username', 'rest', function(err, user) {
+          adapter.find('name', 'rest', function(err, user) {
             // use token from db for POST request
             request(_app)
               .post('/rest/forgot-password/' + user.pwdResetToken)

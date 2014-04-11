@@ -19,7 +19,7 @@ describe('#custom routes', function() {
 
   before(function(done) {
     adapter.save('routes', 'routes@email.com', 'password', function() {
-      adapter.find('username', 'routes', function(err, user) {
+      adapter.find('name', 'routes', function(err, user) {
         user.emailVerified = true;
         adapter.update(user, done);
       });
@@ -59,7 +59,7 @@ describe('#custom routes', function() {
   describe('GET /forgot-password/:token', function() {
 
     it('should work with custom routes', function(done) {
-      adapter.find('username', 'routes', function(err, user) {
+      adapter.find('name', 'routes', function(err, user) {
         request(_app)
           .get('/cannot-remember/' + user.pwdResetToken)
           .end(function(err, res) {
@@ -74,7 +74,7 @@ describe('#custom routes', function() {
   describe('POST /forgot-password/:token', function() {
 
     it('should work with custom routes', function(done) {
-      adapter.find('username', 'routes', function(err, user) {
+      adapter.find('name', 'routes', function(err, user) {
         request(_app)
           .post('/cannot-remember/' + user.pwdResetToken)
           .send({password: 'new Password'})

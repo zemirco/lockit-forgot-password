@@ -112,7 +112,7 @@ describe('# default config', function() {
         .send({email: 'steve@email.com'})
         .end(function(error, res) {
           // get token from db
-          adapter.find('username', 'steve', function(err, user) {
+          adapter.find('name', 'steve', function(err, user) {
             // use GET request
             request(_app)
               .get('/forgot-password/' + user.pwdResetToken)
@@ -133,7 +133,7 @@ describe('# default config', function() {
         .send({email: 'steve@email.com'})
         .end(function(error, res) {
           // get token from db
-          adapter.find('username', 'steve', function(err, user) {
+          adapter.find('name', 'steve', function(err, user) {
             // use GET request
             request(_app)
               .get('/forgot-password/' + user.pwdResetToken)
@@ -192,7 +192,7 @@ describe('# default config', function() {
         .send({email: 'steve@email.com'})
         .end(function(error, res) {
           // get token from db
-          adapter.find('username', 'steve', function(err, user) {
+          adapter.find('name', 'steve', function(err, user) {
             // use token from db for POST request
             request(_app)
               .post('/forgot-password/' + user.pwdResetToken)
@@ -209,7 +209,7 @@ describe('# default config', function() {
 
     it('should render a success message when everything is fine', function(done) {
       // get token from db
-      adapter.find('username', 'john', function(err, user) {
+      adapter.find('name', 'john', function(err, user) {
         // use token to make proper request
         request(_app)
           .post('/forgot-password/' + user.pwdResetToken)

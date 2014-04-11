@@ -82,7 +82,7 @@ describe('# custom views', function() {
         .send({email: 'custom@email.com'})
         .end(function(error, res) {
           // get token from db
-          adapter.find('username', 'custom', function(err, user) {
+          adapter.find('name', 'custom', function(err, user) {
             // use GET request
             request(_app)
               .get('/forgot-password/' + user.pwdResetToken)
@@ -118,7 +118,7 @@ describe('# custom views', function() {
         .send({email: 'custom@email.com'})
         .end(function(error, res) {
           // get token from db
-          adapter.find('username', 'custom', function(err, user) {
+          adapter.find('name', 'custom', function(err, user) {
             // use token from db for POST request
             request(_app)
               .post('/forgot-password/' + user.pwdResetToken)
@@ -138,7 +138,7 @@ describe('# custom views', function() {
         .send({email: 'custom@email.com'})
         .end(function(error, res) {
           // get token from db
-          adapter.find('username', 'custom', function(err, user) {
+          adapter.find('name', 'custom', function(err, user) {
             // use token from db for POST request
             request(_app)
               .post('/forgot-password/' + user.pwdResetToken)

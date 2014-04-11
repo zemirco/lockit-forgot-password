@@ -26,7 +26,7 @@ describe('# csrf', function() {
 
   before(function(done) {
     adapter.save('csrf', 'csrf@email.com', 'password', function() {
-      adapter.find('username', 'csrf', function(err, user) {
+      adapter.find('name', 'csrf', function(err, user) {
         user.emailVerified = true;
         adapter.update(user, done);
       });
@@ -57,7 +57,7 @@ describe('# csrf', function() {
         .send({email: 'csrf@email.com'})
         .end(function() {
           // find token
-          adapter.find('username', 'csrf', function(err, user) {
+          adapter.find('name', 'csrf', function(err, user) {
             request(_app)
               .get('/forgot-password/' + user.pwdResetToken)
               .end(function(err, res) {
