@@ -39,7 +39,7 @@ More about configuration at [Lockit](https://github.com/zeMirco/lockit).
  - input validation
  - link expiration times
  - user email verification via unique token
- - hash password using [bcrypt](https://github.com/ncb000gt/node.bcrypt.js)
+ - hash password using [pbkdf2](http://nodejs.org/api/crypto.html#crypto_crypto_pbkdf2_password_salt_iterations_keylen_callback)
  - token format verification before database querying
 
 ## Routes included
