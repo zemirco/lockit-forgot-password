@@ -9,24 +9,28 @@ Help users who forgot their passwords for your Express app. The module is part o
 `npm install lockit-forgot-password`
 
 ```js
+var ForgotPassword = require('lockit-forgot-password');
+var lockitUtils = require('lockit-utils');
 var config = require('./config.js');
-var forgotPassword = require('lockit-forgot-password');
+
+var db = lockitUtils.getDatabase(config);
+var adapter = require(db.adapter)(config);
 
 var app = express();
 
 // express settings
 // ...
-
 // sessions are required - either cookie or some sort of db
-app.use(express.cookieParser('your secret here'));
-app.use(express.cookieSession());
-app.use(app.router);
+app.use(cookieParser());
+app.use(cookieSession({
+  secret: 'this is my super secret string'
+}));
 
-// use middleware after router so it doesn't interfere with your own routes
-forgotPassword(app, config);
+// create new ForgotPassword instance
+var forgotPassword = new ForgotPassword(config, adapter);
 
-// serve static files as last middleware
-app.use(express.static(path.join(__dirname, 'public')));
+// use forgotPassword.router with your app
+app.use(forgotPassword.router);
 ```
 
 ## Configuration
@@ -51,7 +55,7 @@ More about configuration at [Lockit](https://github.com/zeMirco/lockit).
 
 ## REST API
 
-If you've set `exports.rest = true` in your `config.js` the module behaves as follows.
+If you've set `exports.rest` in your `config.js` the module behaves as follows.
 
  - all routes have `/rest` prepended
  - `GET /rest/forgot-password` is `next()`ed and you can catch `/forgot-password` on the client
