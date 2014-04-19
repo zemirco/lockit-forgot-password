@@ -30,7 +30,7 @@
     "couch-pwd": "0.0.1"
   },
   "devDependencies": {
-    "express": "~3.4.7",
+    "express": "^4.0.0",
     "should": "~2.1.1",
     "supertest": "~0.8.2",
     "grunt-mocha-test": "~0.8.1",
@@ -38,8 +38,14 @@
     "grunt": "~0.4.2",
     "nano": "~4.2.1",
     "jade": "~1.0.0",
-    "lockit-couchdb-adapter": "0.4.0",
-    "lockit-utils": "0.2.0",
-    "cookie": "~0.1.0"
+    "lockit-couchdb-adapter": "0.4.1",
+    "lockit-utils": "0.3.0",
+    "cookie": "~0.1.0",
+    "static-favicon": "~1.0.0",
+    "cookie-parser": "~1.0.1",
+    "body-parser": "~1.0.0",
+    "cookie-session": "~1.0.1",
+    "errorhandler": "~1.0.0",
+    "csurf": "^1.1.0"
   }
 }
