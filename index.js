@@ -1,5 +1,6 @@
 
 var path = require('path');
+var express = require('express');
 var uuid = require('node-uuid');
 var pwd = require('couch-pwd');
 var ms = require('ms');
@@ -17,7 +18,9 @@ function join(view) {
  * Let's get serious
  */
 
-module.exports = function(app, config, adapter) {
+var ForgotPassword = module.exports = function(config, adapter) {
+
+  if (!(this instanceof ForgotPassword)) return new ForgotPassword(config, adapter);
 
   var Mail = require('lockit-sendmail')(config);
 
@@ -34,10 +37,12 @@ module.exports = function(app, config, adapter) {
    * Routes
    */
 
-  app.get(route, getForgot);
-  app.post(route, postForgot);
-  app.get(route + '/:token', getToken);
-  app.post(route + '/:token', postToken);
+  var router = express.Router();
+  router.get(route, getForgot);
+  router.post(route, postForgot);
+  router.get(route + '/:token', getToken);
+  router.post(route + '/:token', postToken);
+  this.router = router;
 
   /**
    * Route handlers
@@ -53,12 +58,13 @@ module.exports = function(app, config, adapter) {
     var view = cfg.views.forgotPassword || join('get-forgot-password');
 
     res.render(view, {
-      title: 'Forgot password'
+      title: 'Forgot password',
+      basedir: req.app.get('views')
     });
   }
 
   // POST /forgot-password
-  function postForgot(req, response) {
+  function postForgot(req, response, next) {
     var email = req.body.email;
 
     var error = null;
@@ -78,7 +84,8 @@ module.exports = function(app, config, adapter) {
       response.status(403);
       response.render(errorView, {
         title: 'Forgot password',
-        error: error
+        error: error,
+        basedir: req.app.get('views')
       });
       return;
     }
@@ -87,7 +94,7 @@ module.exports = function(app, config, adapter) {
 
     // look for user in db
     adapter.find('email', email, function(err, user) {
-      if (err) console.log(err);
+      if (err) return next(err);
 
       // custom or built-in view
       var view = cfg.views.sentEmail || join('post-forgot-password');
@@ -98,7 +105,8 @@ module.exports = function(app, config, adapter) {
         if (config.rest) return response.send(204);
 
         response.render(view, {
-          title: 'Forgot password'
+          title: 'Forgot password',
+          basedir: req.app.get('views')
         });
         return;
       }
@@ -115,18 +123,19 @@ module.exports = function(app, config, adapter) {
 
       // update user in db
       adapter.update(user, function(err, res) {
-        if (err) console.log(err);
+        if (err) return next(err);
 
         // send email with forgot password link
         var mail = new Mail('emailForgotPassword');
         mail.send(user.name, user.email, token, function(err, res) {
-          if (err) console.log(err);
+          if (err) return next(err);
 
           // send only JSON when REST is active
           if (config.rest) return response.send(204);
 
           response.render(view, {
-            title: 'Forgot password'
+            title: 'Forgot password',
+            basedir: req.app.get('views')
           });
         });
 
@@ -148,7 +157,7 @@ module.exports = function(app, config, adapter) {
 
     // check if we have a user with that token
     adapter.find('pwdResetToken', token, function(err, user) {
-      if (err) console.log(err);
+      if (err) return next(err);
 
       // if no user is found forward to error handling middleware
       if (!user) return next();
@@ -161,7 +170,7 @@ module.exports = function(app, config, adapter) {
 
         // update user in db
         adapter.update(user, function(err, user) {
-          if (err) console.log(err);
+          if (err) return next(err);
 
           // send only JSON when REST is active
           if (config.rest) return res.json(403, {error: 'link expired'});
@@ -171,7 +180,8 @@ module.exports = function(app, config, adapter) {
 
           // tell user that link has expired
           res.render(view, {
-            title: 'Forgot password - Link expired'
+            title: 'Forgot password - Link expired',
+            basedir: req.app.get('views')
           });
 
         });
@@ -188,7 +198,8 @@ module.exports = function(app, config, adapter) {
       // render success message
       res.render(view, {
         token: token,
-        title: 'Choose a new password'
+        title: 'Choose a new password',
+        basedir: req.app.get('views')
       });
 
     });
@@ -221,14 +232,15 @@ module.exports = function(app, config, adapter) {
       res.render(view, {
         title: 'Choose a new password',
         error: error,
-        token: token
+        token: token,
+        basedir: req.app.get('views')
       });
       return;
     }
 
     // check for token in db
     adapter.find('pwdResetToken', token, function(err, user) {
-      if (err) console.log(err);
+      if (err) return next(err);
 
       // if no token is found forward to error handling middleware
       if (!user) return next();
@@ -241,7 +253,7 @@ module.exports = function(app, config, adapter) {
 
         // update user in db
         adapter.update(user, function(err, user) {
-          if (err) console.log(err);
+          if (err) return next(err);
 
           // send only JSON when REST is active
           if (config.rest) return res.json(403, {error: 'link expired'});
@@ -251,7 +263,8 @@ module.exports = function(app, config, adapter) {
 
           // tell user that link has expired
           res.render(view, {
-            title: 'Forgot password - Link expired'
+            title: 'Forgot password - Link expired',
+            basedir: req.app.get('views')
           });
 
         });
@@ -265,7 +278,7 @@ module.exports = function(app, config, adapter) {
       // create hash for new password
       // bcrypt.hash(password, 10, function(err, hash) {
       pwd.hash(password, function(err, salt, hash) {
-        if (err) console.log(err);
+        if (err) return next(err);
 
         // update user's credentials
         user.salt = salt;
@@ -277,7 +290,7 @@ module.exports = function(app, config, adapter) {
 
         // update user in db
         adapter.update(user, function(err, user) {
-          if (err) console.log(err);
+          if (err) return next(err);
 
           // send only JSON when REST is active
           if (config.rest) return res.send(204);
@@ -287,7 +300,8 @@ module.exports = function(app, config, adapter) {
 
           // render success message
           res.render(view, {
-            title: 'Password changed'
+            title: 'Password changed',
+            basedir: req.app.get('views')
           });
 
         });
