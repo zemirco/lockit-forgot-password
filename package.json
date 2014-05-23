@@ -25,7 +25,7 @@
     "node-uuid": "~1.4.1",
     "ms": "~0.6.2",
     "lockit-template-blank": "~0.0.1",
-    "lockit-sendmail": "0.1.2",
+    "lockit-sendmail": "1.0.0",
     "couch-pwd": "0.0.1",
     "moment": "^2.6.0"
   },
