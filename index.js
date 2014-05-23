@@ -5,7 +5,7 @@ var uuid = require('node-uuid');
 var pwd = require('couch-pwd');
 var ms = require('ms');
 var moment = require('moment');
-
+var Mail = require('lockit-sendmail');
 
 
 /**
@@ -29,8 +29,6 @@ var ForgotPassword = module.exports = function(config, adapter) {
 
   this.config = config;
   this.adapter = adapter;
-
-  var Mail = this.Mail = require('lockit-sendmail')(config);
 
   // set default route
   var route = config.forgotPassword.route || '/forgot-password';
@@ -87,7 +85,6 @@ ForgotPassword.prototype.getForgot = function(req, res, next) {
 ForgotPassword.prototype.postForgot = function(req, res, next) {
   var config = this.config;
   var adapter = this.adapter;
-  var Mail = this.Mail;
 
   var email = req.body.email;
 
@@ -150,8 +147,8 @@ ForgotPassword.prototype.postForgot = function(req, res, next) {
       if (err) return next(err);
 
       // send email with forgot password link
-      var mail = new Mail('emailForgotPassword');
-      mail.send(user.name, user.email, token, function(err, response) {
+      var mail = new Mail(config);
+      mail.forgot(user.name, user.email, token, function(err, response) {
         if (err) return next(err);
 
         // send only JSON when REST is active
