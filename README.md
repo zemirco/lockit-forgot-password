@@ -1,8 +1,8 @@
 # Lockit forgot password
 
-[![Build Status](https://travis-ci.org/zeMirco/lockit-forgot-password.svg?branch=master)](https://travis-ci.org/zeMirco/lockit-forgot-password) [![NPM version](https://badge.fury.io/js/lockit-forgot-password.svg)](http://badge.fury.io/js/lockit-forgot-password)
+[![Build Status](https://travis-ci.org/zemirco/lockit-forgot-password.svg?branch=master)](https://travis-ci.org/zemirco/lockit-forgot-password) [![NPM version](https://badge.fury.io/js/lockit-forgot-password.svg)](http://badge.fury.io/js/lockit-forgot-password)
 
-Help users who forgot their passwords for your Express app. The module is part of [Lockit](https://github.com/zeMirco/lockit).
+Help users who forgot their passwords for your Express app. The module is part of [Lockit](https://github.com/zemirco/lockit).
 
 ## Installation
 
@@ -10,10 +10,10 @@ Help users who forgot their passwords for your Express app. The module is part o
 
 ```js
 var ForgotPassword = require('lockit-forgot-password');
-var lockitUtils = require('lockit-utils');
+var utils = require('lockit-utils');
 var config = require('./config.js');
 
-var db = lockitUtils.getDatabase(config);
+var db = utils.getDatabase(config);
 var adapter = require(db.adapter)(config);
 
 var app = express();
@@ -35,7 +35,7 @@ app.use(forgotPassword.router);
 
 ## Configuration
 
-More about configuration at [Lockit](https://github.com/zeMirco/lockit).
+More about configuration at [Lockit](https://github.com/zemirco/lockit).
 
 ## Features
 
