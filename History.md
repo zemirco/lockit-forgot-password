@@ -1,5 +1,5 @@
 
-##### 1.1.0 / 2014-05-27
+##### 1.1.1 / 2014-05-27
 
 - set `autocomplete="off"`
 - use Bootstrap responsive classes
