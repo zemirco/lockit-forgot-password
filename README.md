@@ -1,6 +1,8 @@
 # Lockit forgot password
 
-[![Build Status](https://travis-ci.org/zemirco/lockit-forgot-password.svg?branch=master)](https://travis-ci.org/zemirco/lockit-forgot-password) [![NPM version](https://badge.fury.io/js/lockit-forgot-password.svg)](http://badge.fury.io/js/lockit-forgot-password)
+[![Build Status](https://travis-ci.org/zemirco/lockit-forgot-password.svg?branch=master)](https://travis-ci.org/zemirco/lockit-forgot-password)
+[![NPM version](https://badge.fury.io/js/lockit-forgot-password.svg)](http://badge.fury.io/js/lockit-forgot-password)
+[![Dependency Status](https://david-dm.org/zemirco/lockit-forgot-password.svg)](https://david-dm.org/zemirco/lockit-forgot-password)
 
 Help users who forgot their passwords for your Express app. The module is part of [Lockit](https://github.com/zemirco/lockit).
 
