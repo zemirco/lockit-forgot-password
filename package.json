@@ -30,8 +30,6 @@
     "moment": "^2.6.0"
   },
   "devDependencies": {
-    "express": "^4.3.0",
-    "should": "^3.3.1",
     "supertest": "^0.13.0",
     "grunt-mocha-test": "^0.10.2",
     "grunt-contrib-jshint": "^0.10.0",
@@ -44,8 +42,10 @@
     "errorhandler": "^1.0.1",
     "csurf": "^1.2.0",
     "cookie-parser": "^1.1.0",
-    "body-parser": "^1.2.0",
     "cookie-session": "^1.0.2",
-    "lockit-utils": "^0.4.2"
+    "lockit-utils": "^0.4.2",
+    "should": "^3.3.2",
+    "body-parser": "^1.2.2",
+    "express": "^4.3.1"
   }
 }
