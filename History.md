@@ -1,4 +1,9 @@
 
+##### 1.1.0 / 2014-05-27
+
+- set `autocomplete="off"`
+- use Bootstrap responsive classes
+
 ##### 1.1.0 / 2014-05-23
 
 - refactor code
