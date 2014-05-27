@@ -33,7 +33,7 @@ describe('#custom routes', function() {
         .get('/cannot-remember')
         .end(function(err, res) {
           res.statusCode.should.equal(200);
-          res.text.should.include('Enter your email address here and we\'ll send you an email with a link');
+          res.text.should.include('<div class="panel-heading">Forgot password</div>');
           res.text.should.include('<title>Forgot password</title>');
           done();
         });
