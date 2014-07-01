@@ -1,5 +1,7 @@
 
 var path = require('path');
+var events = require('events');
+var util = require('util');
 var express = require('express');
 var uuid = require('node-uuid');
 var pwd = require('couch-pwd');
@@ -27,6 +29,9 @@ var ForgotPassword = module.exports = function(config, adapter) {
 
   if (!(this instanceof ForgotPassword)) return new ForgotPassword(config, adapter);
 
+  // call super constructor function
+  events.EventEmitter.call(this);
+
   this.config = config;
   this.adapter = adapter;
 
@@ -48,6 +53,8 @@ var ForgotPassword = module.exports = function(config, adapter) {
   this.router = router;
 
 };
+
+util.inherits(ForgotPassword, events.EventEmitter);
 
 
 
@@ -85,6 +92,7 @@ ForgotPassword.prototype.getForgot = function(req, res, next) {
 ForgotPassword.prototype.postForgot = function(req, res, next) {
   var config = this.config;
   var adapter = this.adapter;
+  var that = this;
 
   var email = req.body.email;
 
@@ -150,6 +158,9 @@ ForgotPassword.prototype.postForgot = function(req, res, next) {
       var mail = new Mail(config);
       mail.forgot(user.name, user.email, token, function(err, response) {
         if (err) return next(err);
+
+        // emit event
+        that.emit('forgot::sent', user, res);
 
         // send only JSON when REST is active
         if (config.rest) return res.send(204);
@@ -249,6 +260,7 @@ ForgotPassword.prototype.getToken = function(req, res, next) {
 ForgotPassword.prototype.postToken = function(req, res, next) {
   var config = this.config;
   var adapter = this.adapter;
+  var that = this;
 
   var password = req.body.password;
   var token = req.params.token;
@@ -333,6 +345,9 @@ ForgotPassword.prototype.postToken = function(req, res, next) {
       // update user in db
       adapter.update(user, function(err, user) {
         if (err) return next(err);
+
+        // emit event
+        that.emit('forgot::success', user, res);
 
         // send only JSON when REST is active
         if (config.rest) return res.send(204);
