@@ -35,8 +35,8 @@ describe('# default config', function() {
         .get('/forgot-password')
         .end(function(err, res) {
           res.statusCode.should.equal(200);
-          res.text.should.include('<div class="panel-heading">Forgot password</div>');
-          res.text.should.include('<title>Forgot password</title>');
+          res.text.should.containEql('<div class="panel-heading">Forgot password</div>');
+          res.text.should.containEql('<title>Forgot password</title>');
           done();
         });
     });
@@ -51,7 +51,7 @@ describe('# default config', function() {
         .send({email: 'johnwayne.com'})
         .end(function(error, res) {
           res.statusCode.should.equal(403);
-          res.text.should.include('Email is invalid');
+          res.text.should.containEql('Email is invalid');
           done();
         });
     });
@@ -62,8 +62,8 @@ describe('# default config', function() {
         .send({email: 'jim@wayne.com'})
         .end(function(error, res) {
           res.statusCode.should.equal(200);
-          res.text.should.include('Email with link for password reset sent.');
-          res.text.should.include('<title>Forgot password</title>');
+          res.text.should.containEql('Email with link for password reset sent.');
+          res.text.should.containEql('<title>Forgot password</title>');
           done();
         });
     });
@@ -74,8 +74,8 @@ describe('# default config', function() {
         .send({email: 'john@email.com'})
         .end(function(error, res) {
           res.statusCode.should.equal(200);
-          res.text.should.include('Email with link for password reset sent.');
-          res.text.should.include('<title>Forgot password</title>');
+          res.text.should.containEql('Email with link for password reset sent.');
+          res.text.should.containEql('<title>Forgot password</title>');
           done();
         });
     });
@@ -89,7 +89,7 @@ describe('# default config', function() {
         .get('/forgot-password/some-test-token-123')
         .end(function(err, res) {
           res.statusCode.should.equal(404);
-          res.text.should.include('Cannot GET /forgot-password/some-test-token-123');
+          res.text.should.containEql('Cannot GET /forgot-password/some-test-token-123');
           done();
         });
     });
@@ -100,7 +100,7 @@ describe('# default config', function() {
         .get('/forgot-password/' + token)
         .end(function(err, res) {
           res.statusCode.should.equal(404);
-          res.text.should.include('Cannot GET /forgot-password/' + token);
+          res.text.should.containEql('Cannot GET /forgot-password/' + token);
           done();
         });
     });
@@ -118,8 +118,8 @@ describe('# default config', function() {
               .get('/forgot-password/' + user.pwdResetToken)
               .end(function(err, res) {
                 res.statusCode.should.equal(200);
-                res.text.should.include('This link has expired');
-                res.text.should.include('<title>Forgot password - Link expired</title>');
+                res.text.should.containEql('This link has expired');
+                res.text.should.containEql('<title>Forgot password - Link expired</title>');
                 done();
               });
           });
@@ -138,7 +138,7 @@ describe('# default config', function() {
             request(_app)
               .get('/forgot-password/' + user.pwdResetToken)
               .end(function(err, res) {
-                res.text.should.include('Create a new password');
+                res.text.should.containEql('Create a new password');
                 done();
               });
           });
@@ -156,8 +156,8 @@ describe('# default config', function() {
         .send({password: ''})
         .end(function(err, res) {
           res.statusCode.should.equal(403);
-          res.text.should.include('Please enter a password');
-          res.text.should.include('<title>Choose a new password</title>');
+          res.text.should.containEql('Please enter a password');
+          res.text.should.containEql('<title>Choose a new password</title>');
           done();
         });
     });
@@ -168,7 +168,7 @@ describe('# default config', function() {
         .send({password: 'new Password'})
         .end(function(err, res) {
           res.statusCode.should.equal(404);
-          res.text.should.include('Cannot POST /forgot-password/some-test-token-123');
+          res.text.should.containEql('Cannot POST /forgot-password/some-test-token-123');
           done();
         });
     });
@@ -180,7 +180,7 @@ describe('# default config', function() {
           .send({password: 'new Password'})
           .end(function(err, res) {
             res.statusCode.should.equal(404);
-            res.text.should.include('Cannot POST /forgot-password/' + token);
+            res.text.should.containEql('Cannot POST /forgot-password/' + token);
             done();
           });
     });
@@ -199,8 +199,8 @@ describe('# default config', function() {
               .send({password: 'something'})
               .end(function(err, res) {
                 res.statusCode.should.equal(200);
-                res.text.should.include('This link has expired');
-                res.text.should.include('<title>Forgot password - Link expired</title>');
+                res.text.should.containEql('This link has expired');
+                res.text.should.containEql('<title>Forgot password - Link expired</title>');
                 done();
               });
           });
@@ -216,8 +216,8 @@ describe('# default config', function() {
           .send({password: 'new Password'})
           .end(function(err, res) {
             res.statusCode.should.equal(200);
-            res.text.should.include('You have successfully changed your password');
-            res.text.should.include('<title>Password changed</title>');
+            res.text.should.containEql('You have successfully changed your password');
+            res.text.should.containEql('<title>Password changed</title>');
             done();
           });
       });

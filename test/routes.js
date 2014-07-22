@@ -33,8 +33,8 @@ describe('#custom routes', function() {
         .get('/cannot-remember')
         .end(function(err, res) {
           res.statusCode.should.equal(200);
-          res.text.should.include('<div class="panel-heading">Forgot password</div>');
-          res.text.should.include('<title>Forgot password</title>');
+          res.text.should.containEql('<div class="panel-heading">Forgot password</div>');
+          res.text.should.containEql('<title>Forgot password</title>');
           done();
         });
     });
@@ -49,7 +49,7 @@ describe('#custom routes', function() {
         .send({email: 'routes@email.com'})
         .end(function(error, res) {
           res.statusCode.should.equal(200);
-          res.text.should.include('Email with link for password reset sent.');
+          res.text.should.containEql('Email with link for password reset sent.');
           done();
         });
     });
@@ -63,7 +63,7 @@ describe('#custom routes', function() {
         request(_app)
           .get('/cannot-remember/' + user.pwdResetToken)
           .end(function(err, res) {
-            res.text.should.include('Create a new password');
+            res.text.should.containEql('Create a new password');
             done();
           });
       });
@@ -80,7 +80,7 @@ describe('#custom routes', function() {
           .send({password: 'new Password'})
           .end(function(err, res) {
             res.statusCode.should.equal(200);
-            res.text.should.include('You have successfully changed your password');
+            res.text.should.containEql('You have successfully changed your password');
             done();
           });
       });

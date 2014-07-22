@@ -41,7 +41,7 @@ describe('# custom views', function() {
       request(_app)
         .get('/forgot-password')
         .end(function(err, res) {
-          res.text.should.include('Too bad you forgot your password!');
+          res.text.should.containEql('Too bad you forgot your password!');
           done();
         });
     });
@@ -56,7 +56,7 @@ describe('# custom views', function() {
         .post('/forgot-password')
         .send({email: 'someemail.com'})
         .end(function(error, res) {
-          res.text.should.include('Too bad you forgot your password!');
+          res.text.should.containEql('Too bad you forgot your password!');
           done();
         });
     });
@@ -67,7 +67,7 @@ describe('# custom views', function() {
         .post('/forgot-password')
         .send({email: 'jim@wayne.com'})
         .end(function(error, res) {
-          res.text.should.include('You\'ve got mail');
+          res.text.should.containEql('You\'ve got mail');
           done();
         });
     });
@@ -87,7 +87,7 @@ describe('# custom views', function() {
             request(_app)
               .get('/forgot-password/' + user.pwdResetToken)
               .end(function(err, res) {
-                res.text.should.include('Just choose a new one.');
+                res.text.should.containEql('Just choose a new one.');
                 done();
               });
           });
@@ -105,7 +105,7 @@ describe('# custom views', function() {
         .post('/forgot-password/' + token)
         .send({password: ''})
         .end(function(err, res) {
-          res.text.should.include('Too bad you forgot your password!');
+          res.text.should.containEql('Too bad you forgot your password!');
           done();
         });
     });
@@ -124,7 +124,7 @@ describe('# custom views', function() {
               .post('/forgot-password/' + user.pwdResetToken)
               .send({password: 'something'})
               .end(function(err, res) {
-                res.text.should.include('No no no! Not valid anymore.');
+                res.text.should.containEql('No no no! Not valid anymore.');
                 done();
               });
           });
@@ -144,7 +144,7 @@ describe('# custom views', function() {
               .post('/forgot-password/' + user.pwdResetToken)
               .send({password: 'something'})
               .end(function(err, res) {
-                res.text.should.include('Well done, bro!');
+                res.text.should.containEql('Well done, bro!');
                 done();
               });
           });
