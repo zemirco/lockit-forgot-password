@@ -63,6 +63,11 @@ function start(config) {
   var db = lockitUtils.getDatabase(config);
   var adapter = require(db.adapter)(config);
   var forgotPassword = new ForgotPassword(config, adapter);
+
+  // expose login and adapter for testing
+  app._forgotPassword = forgotPassword;
+  app._adapter = adapter;
+
   app.use(forgotPassword.router);
 
   // development only
