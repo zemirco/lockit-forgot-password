@@ -1,4 +1,8 @@
 
+##### 1.3.0 / 2014-09-27
+
+- update dependencies
+
 ##### 1.2.0 / 2014-07-23
 
 - add events `'forgot::sent'` and `'forgot::success'`
