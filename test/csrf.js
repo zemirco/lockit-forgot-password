@@ -1,6 +1,7 @@
+'use strict';
 
 var request = require('supertest');
-var should = require('should');
+var should = require('should'); // eslint-disable-line no-unused-vars
 var cookie = require('cookie');
 var utls = require('lockit-utils');
 
@@ -17,16 +18,17 @@ _config.forgotPassword.tokenExpiration = '10 ms';
 var _app = app(_config);
 
 // second app without csrf so we can easily make a POST request to create token
-var _config_two = JSON.parse(JSON.stringify(config));
-_config_two.port = 9001;
-_config_two.forgotPassword.tokenExpiration = '1 hour';
-var _app_two = app(_config_two);
+var configWithoutCSRF = JSON.parse(JSON.stringify(config));
+configWithoutCSRF.port = 9001;
+configWithoutCSRF.forgotPassword.tokenExpiration = '1 hour';
+var appWithoutCSRF = app(configWithoutCSRF);
 
 describe('# csrf', function() {
 
   before(function(done) {
     adapter.save('csrf', 'csrf@email.com', 'password', function() {
       adapter.find('name', 'csrf', function(err, user) {
+        if (err) {console.log(err); }
         user.emailVerified = true;
         adapter.update(user, done);
       });
@@ -39,6 +41,7 @@ describe('# csrf', function() {
       request(_app)
         .get('/forgot-password')
         .end(function(err, res) {
+          if (err) {console.log(err); }
           var cookies = cookie.parse(res.headers['set-cookie'][0]);
           var token = cookies.csrf;
           res.text.should.containEql('name="_csrf" value="' + token + '"');
@@ -52,15 +55,17 @@ describe('# csrf', function() {
 
     it('should include the token in the view', function(done) {
       // create token
-      request(_app_two)
+      request(appWithoutCSRF)
         .post('/forgot-password')
         .send({email: 'csrf@email.com'})
         .end(function() {
           // find token
           adapter.find('name', 'csrf', function(err, user) {
+            if (err) {console.log(err); }
             request(_app)
               .get('/forgot-password/' + user.pwdResetToken)
-              .end(function(err, res) {
+              .end(function(error, res) {
+                if (error) {console.log(error); }
                 var cookies = cookie.parse(res.headers['set-cookie'][0]);
                 var token = cookies.csrf;
                 res.text.should.containEql('name="_csrf" value="' + token + '"');

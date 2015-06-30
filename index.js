@@ -1,3 +1,4 @@
+'use strict';
 
 var path = require('path');
 var events = require('events');
@@ -27,7 +28,7 @@ function join(view) {
  */
 var ForgotPassword = module.exports = function(config, adapter) {
 
-  if (!(this instanceof ForgotPassword)) return new ForgotPassword(config, adapter);
+  if (!(this instanceof ForgotPassword)) {return new ForgotPassword(config, adapter); }
 
   // call super constructor function
   events.EventEmitter.call(this);
@@ -39,13 +40,13 @@ var ForgotPassword = module.exports = function(config, adapter) {
   var route = config.forgotPassword.route || '/forgot-password';
 
   // add prefix when rest is active
-  if (config.rest) route = '/rest' + route;
+  if (config.rest) {route = '/rest' + route; }
 
   /**
    * Routes
    */
 
-  var router = express.Router();
+  var router = new express.Router();
   router.get(route, this.getForgot.bind(this));
   router.post(route, this.postForgot.bind(this));
   router.get(route + '/:token', this.getToken.bind(this));
@@ -69,7 +70,7 @@ ForgotPassword.prototype.getForgot = function(req, res, next) {
   var config = this.config;
 
   // do not handle the route when REST is active
-  if (config.rest) return next();
+  if (config.rest) {return next(); }
 
   // custom or built-in view
   var view = config.forgotPassword.views.forgotPassword || join('get-forgot-password');
@@ -105,25 +106,24 @@ ForgotPassword.prototype.postForgot = function(req, res, next) {
     error = 'Email is invalid';
 
     // send only JSON when REST is active
-    if (config.rest) return res.json(403, {error: error});
+    if (config.rest) {return res.json(403, {error: error}); }
 
     // custom or built-in view
     var errorView = config.forgotPassword.views.forgotPassword || join('get-forgot-password');
 
     res.status(403);
-    res.render(errorView, {
+    return res.render(errorView, {
       title: 'Forgot password',
       error: error,
       basedir: req.app.get('views')
     });
-    return;
   }
 
   // looks like given email address has the correct format
 
   // look for user in db
   adapter.find('email', email, function(err, user) {
-    if (err) return next(err);
+    if (err) {return next(err); }
 
     // custom or built-in view
     var view = config.forgotPassword.views.sentEmail || join('post-forgot-password');
@@ -131,13 +131,12 @@ ForgotPassword.prototype.postForgot = function(req, res, next) {
     // no user found -> pretend we sent an email
     if (!user) {
       // send only JSON when REST is active
-      if (config.rest) return res.send(204);
+      if (config.rest) {return res.send(204); }
 
-      res.render(view, {
+      return res.render(view, {
         title: 'Forgot password',
         basedir: req.app.get('views')
       });
-      return;
     }
 
     // user found in db
@@ -151,19 +150,19 @@ ForgotPassword.prototype.postForgot = function(req, res, next) {
     user.pwdResetTokenExpires = moment().add(timespan, 'ms').toDate();
 
     // update user in db
-    adapter.update(user, function(err, user) {
-      if (err) return next(err);
+    adapter.update(user, function(er, usr) {
+      if (er) {return next(er); }
 
       // send email with forgot password link
       var mail = new Mail(config);
-      mail.forgot(user.name, user.email, token, function(err, response) {
-        if (err) return next(err);
+      mail.forgot(usr.name, usr.email, token, function(e) {
+        if (e) {return next(e); }
 
         // emit event
-        that.emit('forgot::sent', user, res);
+        that.emit('forgot::sent', usr, res);
 
         // send only JSON when REST is active
-        if (config.rest) return res.send(204);
+        if (config.rest) {return res.send(204); }
 
         res.render(view, {
           title: 'Forgot password',
@@ -196,14 +195,14 @@ ForgotPassword.prototype.getToken = function(req, res, next) {
   var re = new RegExp('[0-9a-f]{22}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', 'i');
 
   // if format is wrong no need to query the database
-  if (!re.test(token)) return next();
+  if (!re.test(token)) {return next(); }
 
   // check if we have a user with that token
   adapter.find('pwdResetToken', token, function(err, user) {
-    if (err) return next(err);
+    if (err) {return next(err); }
 
     // if no user is found forward to error handling middleware
-    if (!user) return next();
+    if (!user) {return next(); }
 
     // check if token has expired
     if (new Date(user.pwdResetTokenExpires) < new Date()) {
@@ -212,11 +211,11 @@ ForgotPassword.prototype.getToken = function(req, res, next) {
       delete user.pwdResetTokenExpires;
 
       // update user in db
-      adapter.update(user, function(err, user) {
-        if (err) return next(err);
+      return adapter.update(user, function(error) {
+        if (error) {return next(error); }
 
         // send only JSON when REST is active
-        if (config.rest) return res.json(403, {error: 'link expired'});
+        if (config.rest) {return res.json(403, {error: 'link expired'}); }
 
         // custom or built-in view
         var view = config.forgotPassword.views.linkExpired || join('link-expired');
@@ -229,11 +228,10 @@ ForgotPassword.prototype.getToken = function(req, res, next) {
 
       });
 
-      return;
     }
 
     // send only JSON when REST is active
-    if (config.rest) return res.send(204);
+    if (config.rest) {return res.send(204); }
 
     // custom or built-in view
     var view = config.forgotPassword.views.newPassword || join('get-new-password');
@@ -271,34 +269,33 @@ ForgotPassword.prototype.postToken = function(req, res, next) {
   var re = new RegExp('[0-9a-f]{22}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', 'i');
 
   // if format is wrong no need to query the database
-  if (!re.test(token)) return next();
+  if (!re.test(token)) {return next(); }
 
   // check for valid input
   if (!password) {
     error = 'Please enter a password';
 
     // send only JSON when REST is active
-    if (config.rest) return res.json(403, {error: error});
+    if (config.rest) {return res.json(403, {error: error}); }
 
     // custom or built-in view
     var view = config.forgotPassword.views.forgotPassword || join('get-forgot-password');
 
     res.status(403);
-    res.render(view, {
+    return res.render(view, {
       title: 'Choose a new password',
       error: error,
       token: token,
       basedir: req.app.get('views')
     });
-    return;
   }
 
   // check for token in db
   adapter.find('pwdResetToken', token, function(err, user) {
-    if (err) return next(err);
+    if (err) {return next(err); }
 
     // if no token is found forward to error handling middleware
-    if (!user) return next();
+    if (!user) {return next(); }
 
     // check if token has expired
     if (new Date(user.pwdResetTokenExpires) < new Date()) {
@@ -307,56 +304,55 @@ ForgotPassword.prototype.postToken = function(req, res, next) {
       delete user.pwdResetTokenExpires;
 
       // update user in db
-      adapter.update(user, function(err, user) {
-        if (err) return next(err);
+      return adapter.update(user, function(e) {
+        if (e) {return next(e); }
 
         // send only JSON when REST is active
-        if (config.rest) return res.json(403, {error: 'link expired'});
+        if (config.rest) {return res.json(403, {error: 'link expired'}); }
 
         // custom or built-in view
-        var view = config.forgotPassword.views.linkExpired || join('link-expired');
+        var viewExpired = config.forgotPassword.views.linkExpired || join('link-expired');
 
         // tell user that link has expired
-        res.render(view, {
+        res.render(viewExpired, {
           title: 'Forgot password - Link expired',
           basedir: req.app.get('views')
         });
 
       });
 
-      return;
     }
 
     // if user comes from couchdb it has an 'iterations' key
-    if (user.iterations) pwd.iterations(user.iterations);
+    if (user.iterations) {pwd.iterations(user.iterations); }
 
     // create hash for new password
-    pwd.hash(password, function(err, salt, hash) {
-      if (err) return next(err);
+    pwd.hash(password, function(hashError, salt, hash) {
+      if (hashError) {return next(hashError); }
 
       // update user's credentials
       user.salt = salt;
-      user.derived_key = hash;
+      user.derived_key = hash; // eslint-disable-line camelcase
 
       // remove helper properties
       delete user.pwdResetToken;
       delete user.pwdResetTokenExpires;
 
       // update user in db
-      adapter.update(user, function(err, user) {
-        if (err) return next(err);
+      adapter.update(user, function(updateErr, updateUser) {
+        if (updateErr) {return next(updateErr); }
 
         // emit event
-        that.emit('forgot::success', user, res);
+        that.emit('forgot::success', updateUser, res);
 
         // send only JSON when REST is active
-        if (config.rest) return res.send(204);
+        if (config.rest) {return res.send(204); }
 
         // custom or built-in view
-        var view = config.forgotPassword.views.changedPassword || join('change-password-success');
+        var viewChanged = config.forgotPassword.views.changedPassword || join('change-password-success');
 
         // render success message
-        res.render(view, {
+        res.render(viewChanged, {
           title: 'Password changed',
           basedir: req.app.get('views')
         });

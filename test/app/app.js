@@ -1,3 +1,4 @@
+'use strict';
 
 /**
  * Module dependencies.
@@ -14,7 +15,6 @@ var errorHandler = require('errorhandler');
 var user = require('./routes/user');
 var http = require('http');
 var path = require('path');
-var fs = require('fs');
 var lockitUtils = require('lockit-utils');
 var ForgotPassword = require('../../index.js');
 
@@ -25,9 +25,9 @@ function start(config) {
   var app = express();
 
 // set basedir so views can properly extend layout.jade
-  app.locals.basedir = __dirname + '/views'; // comment out and error returns
+  app.locals.basedir = path.join(__dirname, 'views'); // comment out and error returns
   app.set('port', process.env.PORT || config.port || 3000);
-  app.set('views', __dirname + '/views');
+  app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'jade');
   // make JSON output simpler for testing
   app.set('json spaces', 0);
@@ -71,7 +71,7 @@ function start(config) {
   app.use(forgotPassword.router);
 
   // development only
-  if ('development' == app.get('env')) {
+  if (app.get('env') === 'development') {
     app.use(errorHandler());
   }
 

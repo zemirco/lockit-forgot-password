@@ -1,6 +1,7 @@
+'use strict';
 
 var request = require('supertest');
-var should = require('should');
+var should = require('should'); // eslint-disable-line no-unused-vars
 var uuid = require('node-uuid');
 var utls = require('lockit-utils');
 
@@ -11,21 +12,21 @@ var db = utls.getDatabase(config);
 var adapter = require(db.adapter)(config);
 
 // testing custom views
-var _config = JSON.parse(JSON.stringify(config));
-_config.port = 5000;
-_config.forgotPassword.views = {
+var configCustomViews = JSON.parse(JSON.stringify(config));
+configCustomViews.port = 5000;
+configCustomViews.forgotPassword.views = {
   forgotPassword: 'custom/forgotPassword',
   newPassword: 'custom/newPassword',
   changedPassword: 'custom/changedPassword',
   linkExpired: 'custom/linkExpired',
   sentEmail: 'custom/sentEmail'
 };
-var _app = app(_config);
+var appCustomViews = app(configCustomViews);
 
-var _config_two = JSON.parse(JSON.stringify(config));
-_config_two.port = 5001;
-_config_two.forgotPassword.tokenExpiration = '1 ms';
-var _app_two = app(_config_two);
+var configTokenExpiration = JSON.parse(JSON.stringify(config));
+configTokenExpiration.port = 5001;
+configTokenExpiration.forgotPassword.tokenExpiration = '1 ms';
+var appTokenExpiration = app(configTokenExpiration);
 
 describe('# custom views', function() {
 
@@ -38,9 +39,10 @@ describe('# custom views', function() {
   describe('GET /forgot-password', function() {
 
     it('should work with custom views', function(done) {
-      request(_app)
+      request(appCustomViews)
         .get('/forgot-password')
         .end(function(err, res) {
+          if (err) {console.log(err); }
           res.text.should.containEql('Too bad you forgot your password!');
           done();
         });
@@ -52,7 +54,7 @@ describe('# custom views', function() {
 
     // test the error view
     it('should work with custom view when something is wrong', function(done) {
-      request(_app)
+      request(appCustomViews)
         .post('/forgot-password')
         .send({email: 'someemail.com'})
         .end(function(error, res) {
@@ -63,7 +65,7 @@ describe('# custom views', function() {
 
     // test the success view
     it('should work with custom views', function(done) {
-      request(_app)
+      request(appCustomViews)
         .post('/forgot-password')
         .send({email: 'jim@wayne.com'})
         .end(function(error, res) {
@@ -77,16 +79,18 @@ describe('# custom views', function() {
   describe('GET /forgot-password/:token', function() {
 
     it('should work with custom views', function(done) {
-      request(_app)
+      request(appCustomViews)
         .post('/forgot-password')
         .send({email: 'custom@email.com'})
-        .end(function(error, res) {
+        .end(function() {
           // get token from db
-          adapter.find('name', 'custom', function(err, user) {
+          adapter.find('name', 'custom', function(findErr, user) {
+            if (findErr) {console.log(findErr); }
             // use GET request
-            request(_app)
+            request(appCustomViews)
               .get('/forgot-password/' + user.pwdResetToken)
               .end(function(err, res) {
+                if (err) {console.log(err); }
                 res.text.should.containEql('Just choose a new one.');
                 done();
               });
@@ -101,10 +105,11 @@ describe('# custom views', function() {
     // error view
     it('should work with custom views', function(done) {
       var token = uuid.v4();
-      request(_app)
+      request(appCustomViews)
         .post('/forgot-password/' + token)
         .send({password: ''})
         .end(function(err, res) {
+          if (err) {console.log(err); }
           res.text.should.containEql('Too bad you forgot your password!');
           done();
         });
@@ -113,17 +118,19 @@ describe('# custom views', function() {
     // custom link expired template
     it('should render custom link expired template', function(done) {
       // create token
-      request(_app_two)
+      request(appTokenExpiration)
         .post('/forgot-password')
         .send({email: 'custom@email.com'})
-        .end(function(error, res) {
+        .end(function() {
           // get token from db
-          adapter.find('name', 'custom', function(err, user) {
+          adapter.find('name', 'custom', function(findErr, user) {
+            if (findErr) {console.log(findErr); }
             // use token from db for POST request
-            request(_app)
+            request(appCustomViews)
               .post('/forgot-password/' + user.pwdResetToken)
               .send({password: 'something'})
               .end(function(err, res) {
+                if (err) {console.log(err); }
                 res.text.should.containEql('No no no! Not valid anymore.');
                 done();
               });
@@ -133,17 +140,19 @@ describe('# custom views', function() {
 
     it('should render custom success view', function(done) {
       // create token
-      request(_app)
+      request(appCustomViews)
         .post('/forgot-password')
         .send({email: 'custom@email.com'})
-        .end(function(error, res) {
+        .end(function() {
           // get token from db
-          adapter.find('name', 'custom', function(err, user) {
+          adapter.find('name', 'custom', function(findErr, user) {
+            if (findErr) {console.log(findErr); }
             // use token from db for POST request
-            request(_app)
+            request(appCustomViews)
               .post('/forgot-password/' + user.pwdResetToken)
               .send({password: 'something'})
               .end(function(err, res) {
+                if (err) {console.log(err); }
                 res.text.should.containEql('Well done, bro!');
                 done();
               });

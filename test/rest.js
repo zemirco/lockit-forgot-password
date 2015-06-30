@@ -1,7 +1,7 @@
-
+'use strict';
 
 var request = require('supertest');
-var should = require('should');
+var should = require('should'); // eslint-disable-line no-unused-vars
 var uuid = require('node-uuid');
 var utls = require('lockit-utils');
 
@@ -12,15 +12,15 @@ var db = utls.getDatabase(config);
 var adapter = require(db.adapter)(config);
 
 // testing the rest api
-var _config = JSON.parse(JSON.stringify(config));
-_config.port = 6000;
-_config.rest = true;
-var _app = app(_config);
+var confiRest = JSON.parse(JSON.stringify(config));
+confiRest.port = 6000;
+confiRest.rest = true;
+var appRest = app(confiRest);
 
-var _config_two = JSON.parse(JSON.stringify(config));
-_config_two.port = 6001;
-_config_two.forgotPassword.tokenExpiration = '1 ms';
-var _app_two = app(_config_two);
+var configTokenExpiration = JSON.parse(JSON.stringify(config));
+configTokenExpiration.port = 6001;
+configTokenExpiration.forgotPassword.tokenExpiration = '1 ms';
+var appTokenExpiration = app(configTokenExpiration);
 
 describe('# rest enabled', function() {
 
@@ -34,9 +34,10 @@ describe('# rest enabled', function() {
   describe('GET /forgot-password', function() {
 
     it('should be forwarded to error handling middleware when rest is active', function(done) {
-      request(_app)
+      request(appRest)
         .get('/rest/forgot-password')
         .end(function(err, res) {
+          if (err) {console.log(err); }
           res.statusCode.should.equal(404);
           done();
         });
@@ -47,7 +48,7 @@ describe('# rest enabled', function() {
   describe('POST /forgot-password', function() {
 
     it('should return an error when email has invalid format', function(done) {
-      request(_app)
+      request(appRest)
         .post('/rest/forgot-password')
         .send({email: 'someemail.com'})
         .end(function(error, res) {
@@ -58,7 +59,7 @@ describe('# rest enabled', function() {
     });
 
     it('should render a success message when no user was found', function(done) {
-      request(_app)
+      request(appRest)
         .post('/rest/forgot-password')
         .send({email: 'jim@wayne.com'})
         .end(function(error, res) {
@@ -68,7 +69,7 @@ describe('# rest enabled', function() {
     });
 
     it('should render a success message when email was sent', function(done) {
-      request(_app)
+      request(appRest)
         .post('/rest/forgot-password')
         .send({email: 'rest@email.com'})
         .end(function(error, res) {
@@ -82,9 +83,10 @@ describe('# rest enabled', function() {
   describe('GET /forgot-password/:token', function() {
 
     it('should forward to error handling middleware when token has invalid format', function(done) {
-      request(_app)
+      request(appRest)
         .get('/rest/forgot-password/some-test-token-123')
         .end(function(err, res) {
+          if (err) {console.log(err); }
           res.statusCode.should.equal(404);
           done();
         });
@@ -92,9 +94,10 @@ describe('# rest enabled', function() {
 
     it('should forward to error handling middleware when no user for token is found', function(done) {
       var token = uuid.v4();
-      request(_app)
+      request(appRest)
         .get('/rest/forgot-password/' + token)
         .end(function(err, res) {
+          if (err) {console.log(err); }
           res.statusCode.should.equal(404);
           done();
         });
@@ -102,16 +105,18 @@ describe('# rest enabled', function() {
 
     it('should render the link expired template when token has expired', function(done) {
       // create token
-      request(_app_two)
+      request(appTokenExpiration)
         .post('/forgot-password')
         .send({email: 'alan@email.com'})
-        .end(function(error, res) {
+        .end(function() {
           // get token from db
-          adapter.find('name', 'alan', function(err, user) {
+          adapter.find('name', 'alan', function(error, user) {
+            if (error) {console.log(error); }
             // use GET request
-            request(_app)
+            request(appRest)
               .get('/rest/forgot-password/' + user.pwdResetToken)
               .end(function(err, res) {
+                if (err) {console.log(err); }
                 res.statusCode.should.equal(403);
                 res.text.should.equal('{"error":"link expired"}');
                 done();
@@ -122,16 +127,18 @@ describe('# rest enabled', function() {
 
     it('should render a form to enter the new password', function(done) {
       // create token
-      request(_app)
+      request(appRest)
         .post('/forgot-password')
         .send({email: 'rest@email.com'})
-        .end(function(error, res) {
+        .end(function() {
           // get token from db
           adapter.find('name', 'rest', function(err, user) {
+            if (err) {console.log(err); }
             // use GET request
-            request(_app)
+            request(appRest)
               .get('/rest/forgot-password/' + user.pwdResetToken)
-              .end(function(err, res) {
+              .end(function(error, res) {
+                if (error) {console.log(error); }
                 res.statusCode.should.equal(204);
                 done();
               });
@@ -145,10 +152,11 @@ describe('# rest enabled', function() {
 
     it('should return with an error message when password is empty', function(done) {
       var token = uuid.v4();
-      request(_app)
+      request(appRest)
         .post('/rest/forgot-password/' + token)
         .send({password: ''})
         .end(function(err, res) {
+          if (err) {console.log(err); }
           res.statusCode.should.equal(403);
           res.text.should.equal('{"error":"Please enter a password"}');
           done();
@@ -157,17 +165,19 @@ describe('# rest enabled', function() {
 
     it('should render the link expired template when token has expired', function(done) {
       // create token
-      request(_app_two)
+      request(appTokenExpiration)
         .post('/forgot-password')
         .send({email: 'alan@email.com'})
-        .end(function(error, res) {
+        .end(function() {
           // get token from db
           adapter.find('name', 'alan', function(err, user) {
+            if (err) {console.log(err); }
             // use token from db for POST request
-            request(_app)
+            request(appRest)
               .post('/rest/forgot-password/' + user.pwdResetToken)
               .send({password: 'something'})
-              .end(function(err, res) {
+              .end(function(error, res) {
+                if (error) {console.log(error); }
                 res.statusCode.should.equal(403);
                 res.text.should.equal('{"error":"link expired"}');
                 done();
@@ -178,17 +188,19 @@ describe('# rest enabled', function() {
 
     it('should render a success message when everything is fine', function(done) {
       // create token
-      request(_app)
+      request(appRest)
         .post('/forgot-password')
         .send({email: 'rest@email.com'})
-        .end(function(error, res) {
+        .end(function() {
           // get token from db
           adapter.find('name', 'rest', function(err, user) {
+            if (err) {console.log(err); }
             // use token from db for POST request
-            request(_app)
+            request(appRest)
               .post('/rest/forgot-password/' + user.pwdResetToken)
               .send({password: 'something'})
-              .end(function(err, res) {
+              .end(function(error, res) {
+                if (error) {console.log(error); }
                 res.statusCode.should.equal(204);
                 done();
               });

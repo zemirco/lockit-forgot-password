@@ -1,8 +1,8 @@
+'use strict';
 
 var request = require('supertest');
-var should = require('should');
+var should = require('should'); // eslint-disable-line no-unused-vars
 var uuid = require('node-uuid');
-var cookie = require('cookie');
 var utls = require('lockit-utils');
 
 var config = require('./app/config.js');
@@ -14,11 +14,11 @@ var adapter = require(db.adapter)(config);
 var _app = app(config);
 
 // app with short token expiration time
-var _config_two = JSON.parse(JSON.stringify(config));
+var configTokenExpiration = JSON.parse(JSON.stringify(config));
 // set some custom properties - for testing link expiration
-_config_two.port = 4000;
-_config_two.forgotPassword.tokenExpiration = '10 ms';
-var _app_two = app(_config_two);
+configTokenExpiration.port = 4000;
+configTokenExpiration.forgotPassword.tokenExpiration = '10 ms';
+var appTokenExpiration = app(configTokenExpiration);
 
 describe('# default config', function() {
 
@@ -34,6 +34,7 @@ describe('# default config', function() {
       request(_app)
         .get('/forgot-password')
         .end(function(err, res) {
+          if (err) {console.log(err); }
           res.statusCode.should.equal(200);
           res.text.should.containEql('<div class="panel-heading">Forgot password</div>');
           res.text.should.containEql('<title>Forgot password</title>');
@@ -88,6 +89,7 @@ describe('# default config', function() {
       request(_app)
         .get('/forgot-password/some-test-token-123')
         .end(function(err, res) {
+          if (err) {console.log(err); }
           res.statusCode.should.equal(404);
           res.text.should.containEql('Cannot GET /forgot-password/some-test-token-123');
           done();
@@ -99,6 +101,7 @@ describe('# default config', function() {
       request(_app)
         .get('/forgot-password/' + token)
         .end(function(err, res) {
+          if (err) {console.log(err); }
           res.statusCode.should.equal(404);
           res.text.should.containEql('Cannot GET /forgot-password/' + token);
           done();
@@ -107,16 +110,18 @@ describe('# default config', function() {
 
     it('should render the link expired template when token has expired', function(done) {
       // create token
-      request(_app_two)
+      request(appTokenExpiration)
         .post('/forgot-password')
         .send({email: 'steve@email.com'})
-        .end(function(error, res) {
+        .end(function() {
           // get token from db
           adapter.find('name', 'steve', function(err, user) {
+            if (err) {console.log(err); }
             // use GET request
             request(_app)
               .get('/forgot-password/' + user.pwdResetToken)
-              .end(function(err, res) {
+              .end(function(error, res) {
+                if (error) {console.log(error); }
                 res.statusCode.should.equal(200);
                 res.text.should.containEql('This link has expired');
                 res.text.should.containEql('<title>Forgot password - Link expired</title>');
@@ -131,13 +136,15 @@ describe('# default config', function() {
       request(_app)
         .post('/forgot-password')
         .send({email: 'steve@email.com'})
-        .end(function(error, res) {
+        .end(function() {
           // get token from db
           adapter.find('name', 'steve', function(err, user) {
+            if (err) {console.log(err); }
             // use GET request
             request(_app)
               .get('/forgot-password/' + user.pwdResetToken)
-              .end(function(err, res) {
+              .end(function(error, res) {
+                if (error) {console.log(error); }
                 res.text.should.containEql('Create a new password');
                 done();
               });
@@ -155,6 +162,7 @@ describe('# default config', function() {
         .post('/forgot-password/' + token)
         .send({password: ''})
         .end(function(err, res) {
+          if (err) {console.log(err); }
           res.statusCode.should.equal(403);
           res.text.should.containEql('Please enter a password');
           res.text.should.containEql('<title>Choose a new password</title>');
@@ -167,6 +175,7 @@ describe('# default config', function() {
         .post('/forgot-password/some-test-token-123')
         .send({password: 'new Password'})
         .end(function(err, res) {
+          if (err) {console.log(err); }
           res.statusCode.should.equal(404);
           res.text.should.containEql('Cannot POST /forgot-password/some-test-token-123');
           done();
@@ -179,6 +188,7 @@ describe('# default config', function() {
           .post('/forgot-password/' + token)
           .send({password: 'new Password'})
           .end(function(err, res) {
+            if (err) {console.log(err); }
             res.statusCode.should.equal(404);
             res.text.should.containEql('Cannot POST /forgot-password/' + token);
             done();
@@ -187,17 +197,19 @@ describe('# default config', function() {
 
     it('should render the link expired template when token has expired', function(done) {
       // create token
-      request(_app_two)
+      request(appTokenExpiration)
         .post('/forgot-password')
         .send({email: 'steve@email.com'})
-        .end(function(error, res) {
+        .end(function() {
           // get token from db
           adapter.find('name', 'steve', function(err, user) {
+            if (err) {console.log(err); }
             // use token from db for POST request
             request(_app)
               .post('/forgot-password/' + user.pwdResetToken)
               .send({password: 'something'})
-              .end(function(err, res) {
+              .end(function(error, res) {
+                if (error) {console.log(error); }
                 res.statusCode.should.equal(200);
                 res.text.should.containEql('This link has expired');
                 res.text.should.containEql('<title>Forgot password - Link expired</title>');
@@ -210,11 +222,13 @@ describe('# default config', function() {
     it('should render a success message when everything is fine', function(done) {
       // get token from db
       adapter.find('name', 'john', function(err, user) {
+        if (err) {console.log(err); }
         // use token to make proper request
         request(_app)
           .post('/forgot-password/' + user.pwdResetToken)
           .send({password: 'new Password'})
-          .end(function(err, res) {
+          .end(function(error, res) {
+            if (error) {console.log(error); }
             res.statusCode.should.equal(200);
             res.text.should.containEql('You have successfully changed your password');
             res.text.should.containEql('<title>Password changed</title>');
