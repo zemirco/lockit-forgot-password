@@ -1,4 +1,11 @@
 
+##### 1.3.1 / 2015-06-30
+
+- update dependencies
+- use make instead grunt
+- use eslint
+- add node 0.12 to travis
+
 ##### 1.3.0 / 2014-09-27
 
 - update dependencies
